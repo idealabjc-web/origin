@@ -1,0 +1,231 @@
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Globe2, Film } from 'lucide-react'
+import PrismCometPreloader from '@/components/ui/prism-comet-preloader'
+import OrbitDeliveryHero from '@/components/ui/orbit-delivery-hero'
+
+/* ── Conference stock videos (royalty-free from Pexels) ──────────── */
+const slides = [
+  {
+    video: 'https://videos.pexels.com/video-files/3209828/3209828-uhd_2560_1440_25fps.mp4',
+    heading: 'World-Class Conferences',
+    sub: 'Connecting innovators, researchers and leaders across the globe.',
+  },
+  {
+    video: 'https://videos.pexels.com/video-files/7710243/7710243-uhd_2560_1440_25fps.mp4',
+    heading: 'Expert Speakers & Panels',
+    sub: 'Hear from the brightest minds shaping the future of their industries.',
+  },
+  {
+    video: 'https://videos.pexels.com/video-files/8353620/8353620-uhd_2560_1440_25fps.mp4',
+    heading: 'Global Networking',
+    sub: 'Build meaningful connections with professionals from 40+ countries.',
+  },
+  {
+    video: 'https://videos.pexels.com/video-files/5765788/5765788-uhd_2560_1440_25fps.mp4',
+    heading: 'Immersive Experiences',
+    sub: 'Interactive workshops, exhibitions and live demonstrations.',
+  },
+]
+
+const INTERVAL = 6000
+
+export default function HeroVideoSlider() {
+  const [animDone, setAnimDone] = useState(false)
+  const [heroMode, setHeroMode] = useState<'orbit' | 'video'>('orbit')
+  const [current, setCurrent] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => {
+      setCurrent((p) => (p + 1) % slides.length)
+    }, INTERVAL)
+  }, [])
+
+  useEffect(() => {
+    if (!animDone || heroMode !== 'video') return
+    resetTimer()
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [animDone, heroMode, resetTimer])
+
+  const goTo = (i: number) => {
+    setCurrent(i)
+    resetTimer()
+  }
+
+  /* ── While the preloader is running, show it full section ────────── */
+  if (!animDone) {
+    return (
+      <section
+        id="home"
+        className="relative w-full h-[calc(100vh-72px)] min-h-[560px] overflow-hidden bg-navy-950"
+      >
+        <PrismCometPreloader
+          loop={false}
+          durationMs={4000}
+          word="ORIGIN"
+          caption="Conferences"
+          palette={{
+            background: '#060d20',
+            blue: '#2c55ff',
+            violet: '#8a3dff',
+            magenta: '#ff3fc8',
+            cyan: '#86e6ff',
+            gold: '#c9a24b',
+          }}
+          speed={1.6}
+          intensity={1.2}
+          height="calc(100vh - 72px)"
+          onComplete={() => setAnimDone(true)}
+        />
+      </section>
+    )
+  }
+
+  /* ── Interactive Hero Section: 3D Orbit Tour or Video Showcase ── */
+  return (
+    <section
+      id="home"
+      className={`relative w-full overflow-hidden ${
+        heroMode === 'orbit'
+          ? 'h-[calc(100vh-72px)] min-h-[760px]'
+          : 'h-[calc(100vh-72px)] min-h-[560px] bg-navy-950'
+      }`}
+    >
+      {/* Mode Switcher floating toggle */}
+      <div className="absolute top-4 right-4 z-30 pointer-events-auto">
+        <div className="inline-flex items-center gap-1 p-1 rounded-full bg-navy-900/90 border border-white/15 backdrop-blur-md shadow-xl text-xs">
+          <button
+            onClick={() => setHeroMode('orbit')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition ${
+              heroMode === 'orbit' ? 'bg-gold text-navy-950 shadow' : 'text-white/70 hover:text-white'
+            }`}
+          >
+            <Globe2 className="h-3.5 w-3.5" />
+            <span>3D Global Tour</span>
+          </button>
+          <button
+            onClick={() => setHeroMode('video')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition ${
+              heroMode === 'video' ? 'bg-gold text-navy-950 shadow' : 'text-white/70 hover:text-white'
+            }`}
+          >
+            <Film className="h-3.5 w-3.5" />
+            <span>Video Highlights</span>
+          </button>
+        </div>
+      </div>
+
+      {heroMode === 'orbit' ? (
+        <OrbitDeliveryHero theme="dark" />
+      ) : (
+        <>
+          {/* ── Video layers ─────────────────────────────────────────── */}
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={current}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.2, ease: 'easeInOut' }}
+              className="absolute inset-0"
+            >
+              <video
+                src={slides[current].video}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="h-full w-full object-cover"
+              />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* ── Gradient overlay ─────────────────────────────────────── */}
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-950/70 via-navy-950/50 to-navy-950/90 pointer-events-none" />
+
+          {/* ── Content ──────────────────────────────────────────────── */}
+          <div className="relative z-10 flex h-full flex-col items-center justify-center text-center px-5">
+            <motion.span
+              key={`eye-${current}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="eyebrow mb-4"
+            >
+              ORIGIN Conferences
+            </motion.span>
+
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={`h-${current}`}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.7, ease: 'easeOut' }}
+                className="font-display text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl max-w-4xl"
+              >
+                {slides[current].heading}
+              </motion.h1>
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={`p-${current}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.15, duration: 0.6 }}
+                className="mt-5 max-w-xl text-base text-white/80 sm:text-lg"
+              >
+                {slides[current].sub}
+              </motion.p>
+            </AnimatePresence>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="mt-8 flex flex-wrap gap-4 justify-center"
+            >
+              <a href="#conferences" className="btn btn-gold">
+                Explore Conferences
+              </a>
+              <a href="#contact" className="btn btn-ghost">
+                Become a Speaker
+              </a>
+            </motion.div>
+          </div>
+
+          {/* ── Navigation dots ──────────────────────────────────────── */}
+          <div className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-3">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                aria-label={`Go to slide ${i + 1}`}
+                onClick={() => goTo(i)}
+                className={`h-2.5 rounded-full transition-all duration-500 ${
+                  i === current
+                    ? 'w-8 bg-gold'
+                    : 'w-2.5 bg-white/40 hover:bg-white/70'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* ── Progress bar ─────────────────────────────────────────── */}
+          <motion.div
+            key={`bar-${current}`}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: INTERVAL / 1000, ease: 'linear' }}
+            className="absolute bottom-0 left-0 z-20 h-1 w-full origin-left bg-gold/70"
+          />
+        </>
+      )}
+    </section>
+  )
+}
