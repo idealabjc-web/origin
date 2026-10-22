@@ -29,9 +29,19 @@ const slides = [
 ]
 
 const INTERVAL = 6000
+const SESSION_PRELOADED_KEY = 'origin_has_preloaded_intro'
+
+function checkHasPreloaded(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return sessionStorage.getItem(SESSION_PRELOADED_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
 
 export default function HeroVideoSlider() {
-  const [animDone, setAnimDone] = useState(false)
+  const [animDone, setAnimDone] = useState<boolean>(() => checkHasPreloaded())
   const [heroMode, setHeroMode] = useState<'orbit' | 'video'>('orbit')
   const [current, setCurrent] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -79,7 +89,12 @@ export default function HeroVideoSlider() {
           speed={1.6}
           intensity={1.2}
           height="calc(100vh - 72px)"
-          onComplete={() => setAnimDone(true)}
+          onComplete={() => {
+            try {
+              sessionStorage.setItem(SESSION_PRELOADED_KEY, 'true')
+            } catch {}
+            setAnimDone(true)
+          }}
         />
       </section>
     )

@@ -1,10 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Play } from 'lucide-react'
-import { testimonials, type Testimonial } from '../data/content'
+import { testimonials as initialTestimonials, type Testimonial } from '../data/content'
+import { getTestimonials } from '../lib/supabase'
 import Modal from './Modal'
 import Reveal from './Reveal'
+
 export default function TestimonialVideos() {
+  const [items, setItems] = useState<Testimonial[]>(initialTestimonials)
   const [active, setActive] = useState<Testimonial | null>(null)
+
+  useEffect(() => {
+    function load() {
+      getTestimonials().then(setItems)
+    }
+    load()
+    window.addEventListener('origin:data-updated', load)
+    return () => window.removeEventListener('origin:data-updated', load)
+  }, [])
   return (
     <section id="testimonials" className="bg-gradient-to-b from-navy-950 to-navy-800 py-24 text-white lg:py-32">
       <div className="container-x">
@@ -14,7 +26,7 @@ export default function TestimonialVideos() {
           <p className="mt-4 text-white/70">Discover the experiences and perspectives of our conference community.</p>
         </Reveal>
         <div className="mt-14 grid gap-8 md:grid-cols-3">
-          {testimonials.map((t, k) => (
+          {items.map((t, k) => (
             <Reveal key={t.id} delay={k * 0.1}>
               <article className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-xl backdrop-blur transition hover:-translate-y-1">
                 <button onClick={() => setActive(t)} aria-label={`Play testimonial video from ${t.name}`} className="relative block aspect-video w-full overflow-hidden">

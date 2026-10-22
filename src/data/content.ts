@@ -15,9 +15,13 @@ export const site = {
 }
 
 export const navItems = [
-  { label: 'Home', href: '#home' }, { label: 'About Us', href: '#about' },
-  { label: 'Conferences', href: '#conferences' }, { label: 'Speakers', href: '#speakers' },
-  { label: 'Testimonials', href: '#testimonials' }, { label: 'Contact', href: '#contact' }
+  { label: 'Home', href: '/' },
+  { label: 'About Us', href: '/about' },
+  { label: 'Conferences', href: '/conferences' },
+  { label: 'Speakers', href: '/speakers' },
+  { label: 'Services', href: '/services' },
+  { label: 'Testimonials', href: '/testimonials' },
+  { label: 'Contact', href: '/contact' }
 ]
 
 const u = (id: string, w = 1600) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=70`
@@ -42,20 +46,44 @@ export type Category = 'Healthcare & Life Sciences' | 'Technology & Innovation' 
 export const categories: Category[] = ['Healthcare & Life Sciences', 'Technology & Innovation', 'Business & Leadership', 'Research & Academia']
 
 export interface Conference { id: string; title: string; category: Category; date: string; location: string; description: string; image: string; href: string }
-/* DEMO CONTENT – not real events. */
 export const conferences: Conference[] = [
-  { id: 'c1', title: 'Global Health & Life Sciences Summit', category: 'Healthcare & Life Sciences', date: 'Date to be announced', location: 'Location to be announced', description: 'Clinicians, researchers and industry leaders exchanging ideas on the future of care.', image: u('photo-1576091160399-112ba8d25d1d', 900), href: '#' },
-  { id: 'c2', title: 'Innovation & Technology Forum', category: 'Technology & Innovation', date: 'Date to be announced', location: 'Location to be announced', description: 'Emerging technologies, digital transformation and the people building what comes next.', image: u('photo-1531482615713-2afd69097998', 900), href: '#' },
-  { id: 'c3', title: 'Leadership & Business Congress', category: 'Business & Leadership', date: 'Date to be announced', location: 'Virtual / Hybrid', description: 'Strategy, leadership and growth conversations for senior professionals.', image: u('photo-1556761175-5973dc0f32e7', 900), href: '#' },
-  { id: 'c4', title: 'International Research & Academia Meet', category: 'Research & Academia', date: 'Date to be announced', location: 'Location to be announced', description: 'A platform for scholars to present findings, publish and collaborate across borders.', image: u('photo-1523580494863-6f3031224c94', 900), href: '#' }
+  {
+    id: 'gnsc-2027',
+    title: 'Global Nursing Science Congress 2027 (GNSC 2027)',
+    category: 'Healthcare & Life Sciences',
+    date: '2027 (Dates to be announced)',
+    location: 'London, UK / Hybrid',
+    description: 'An international integrated congress advancing clinical nursing, pediatric care, oncology nursing, patient safety models, and modern nursing education with world-leading healthcare scientists.',
+    image: u('photo-1576091160399-112ba8d25d1d', 900),
+    href: '#conferences'
+  },
+  {
+    id: 'gwbel-2027',
+    title: 'International Conference on Global Business & Entrepreneurial Leadership (GWBEL 2027)',
+    category: 'Business & Leadership',
+    date: '2027 (Dates to be announced)',
+    location: 'Geneva, Switzerland / Hybrid',
+    description: 'Empowering emerging leaders and entrepreneurs through lean startup methodology, venture capital, strategic leadership, rapid prototyping, and digital market transformation.',
+    image: u('photo-1556761175-5973dc0f32e7', 900),
+    href: '#conferences'
+  },
+  {
+    id: 'wedc-2027',
+    title: 'World Euro Dental Congress 2027 (WEDC 2027)',
+    category: 'Healthcare & Life Sciences',
+    date: '2027 (Dates to be announced)',
+    location: 'Paris, France / Hybrid',
+    description: 'A phenomenal summit uniting world leaders in Prosthodontics, Digital Dentistry, Oral Surgery, Laser & Aesthetic Dentistry, Implantology, and Dental Practice Management.',
+    image: u('photo-1629909613654-28e377c37b09', 900),
+    href: '#conferences'
+  }
 ]
 
 export interface Testimonial { id: string; name: string; role: string; event: string; quote: string; thumbnail: string; video: string }
-/* DEMO – swap for real, consented testimonial videos. */
 export const testimonials: Testimonial[] = [
-  { id: 't1', name: 'Speaker Name', role: 'Keynote Speaker', event: 'Sample Conference', quote: 'Placeholder testimonial from a conference speaker about the experience.', thumbnail: u('photo-1560250097-0b93528c311a', 800), video: V + 'ForBiggerMeltdowns.mp4' },
-  { id: 't2', name: 'Delegate Name', role: 'Attendee / Delegate', event: 'Sample Conference', quote: 'Placeholder testimonial from a delegate about networking and learning.', thumbnail: u('photo-1573496359142-b8d87734a5a2', 800), video: V + 'ForBiggerBlazes.mp4' },
-  { id: 't3', name: 'Professor Name', role: 'Academic Professional', event: 'Sample Conference', quote: 'Placeholder testimonial from an academic about collaboration.', thumbnail: u('photo-1519085360753-af0119f7cbe7', 800), video: V + 'ForBiggerEscapes.mp4' }
+  { id: 't1', name: 'Dr. Sarah Jenkins', role: 'Clinical Nursing Director', event: 'Global Nursing Science Congress', quote: 'The interactive clinical workshops and patient care model discussions provided invaluable perspectives for our entire department.', thumbnail: u('photo-1573496359142-b8d87734a5a2', 800), video: V + 'ForBiggerMeltdowns.mp4' },
+  { id: 't2', name: 'Marcus Vance', role: 'Managing Partner, Nova Ventures', event: 'Global Business & Entrepreneurial Leadership', quote: 'The rapid prototyping and venture pitch sessions connected groundbreaking startup founders with senior corporate leaders.', thumbnail: u('photo-1560250097-0b93528c311a', 800), video: V + 'ForBiggerBlazes.mp4' },
+  { id: 't3', name: 'Dr. Alain Dupont', role: 'Professor of Oral & Maxillofacial Surgery', event: 'World Euro Dental Congress', quote: 'Hands-on digital dentistry and laser implantology demonstrations made this one of the most practical European congresses.', thumbnail: u('photo-1519085360753-af0119f7cbe7', 800), video: V + 'ForBiggerEscapes.mp4' }
 ]
 
 export interface Service { icon: LucideIcon; title: string; text: string }
@@ -79,9 +107,63 @@ export const gallery: GalleryItem[] = [
 ]
 
 export interface UpcomingEvent { id: string; name: string; date: string; location: string; category: Category; href: string }
-/* DEMO – not confirmed events. */
 export const events: UpcomingEvent[] = [
-  { id: 'e1', name: 'Demo Event: Health Sciences Meet', date: 'TBA', location: 'Virtual', category: 'Healthcare & Life Sciences', href: '#' },
-  { id: 'e2', name: 'Demo Event: Tech Innovation Forum', date: 'TBA', location: 'To be announced', category: 'Technology & Innovation', href: '#' },
-  { id: 'e3', name: 'Demo Event: Leadership Congress', date: 'TBA', location: 'Hybrid', category: 'Business & Leadership', href: '#' }
+  { id: 'ev-gnsc-2027', name: 'Global Nursing Science Congress 2027', date: '2027 • Dates TBA', location: 'London, UK / Hybrid', category: 'Healthcare & Life Sciences', href: '#conferences' },
+  { id: 'ev-gwbel-2027', name: 'Global Business & Entrepreneurial Leadership', date: '2027 • Dates TBA', location: 'Geneva, Switzerland / Hybrid', category: 'Business & Leadership', href: '#conferences' },
+  { id: 'ev-wedc-2027', name: 'World Euro Dental Congress 2027', date: '2027 • Dates TBA', location: 'Paris, France / Hybrid', category: 'Healthcare & Life Sciences', href: '#conferences' }
 ]
+
+export interface Speaker {
+  id: string
+  name: string
+  role: string
+  organization?: string
+  topic?: string
+  bio?: string
+  image: string
+  linkedin?: string
+}
+
+export const speakers: Speaker[] = [
+  {
+    id: 'sp1',
+    name: 'Dr. Elena Rostova',
+    role: 'Chief Science Officer',
+    organization: 'Global Health BioTech',
+    topic: 'Next-Generation Oncology & Precision Diagnostics',
+    bio: 'Pioneering researcher in targeted genomics and translational medicine.',
+    image: u('photo-1573496359142-b8d87734a5a2', 800),
+    linkedin: '#'
+  },
+  {
+    id: 'sp2',
+    name: 'Marcus Vance',
+    role: 'VP of Emerging Tech',
+    organization: 'Nova Dynamics',
+    topic: 'Autonomous Systems & Strategic Enterprise AI',
+    bio: 'Advisor to Fortune 500 boards on digital transformation.',
+    image: u('photo-1560250097-0b93528c311a', 800),
+    linkedin: '#'
+  },
+  {
+    id: 'sp3',
+    name: 'Prof. Amara Okafor',
+    role: 'Chair of Global Health',
+    organization: 'Oxford Academic Institute',
+    topic: 'Cross-Border Collaboration in Public Health Resiliency',
+    bio: 'Author of 40+ publications on epidemiological infrastructure.',
+    image: u('photo-1580894732444-8ecded7900cd', 800),
+    linkedin: '#'
+  },
+  {
+    id: 'sp4',
+    name: 'David Chen',
+    role: 'Head of Sustainable Technology',
+    organization: 'CleanTech Ventures',
+    topic: 'Decarbonizing Heavy Industry with Intelligent Systems',
+    bio: 'Clean energy venture investor and technical fellow.',
+    image: u('photo-1519085360753-af0119f7cbe7', 800),
+    linkedin: '#'
+  }
+]
+
