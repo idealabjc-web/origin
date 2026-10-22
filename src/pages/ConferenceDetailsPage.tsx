@@ -17,17 +17,26 @@ interface ConferenceSpeaker {
   topic: string
 }
 
+interface ConferenceAboutData {
+  leadIntro: string
+  fullDescription: string[]
+  corePillarsHeading: string
+  corePillars: { title: string; desc: string }[]
+  callout?: string
+}
+
 interface ConferenceDetailsData {
   tagline: string
   venueName: string
   venueCity: string
   airport: string
   hotelPartner: string
+  about: ConferenceAboutData
   tracks: { id: number; title: string; category: string; sessionFocus: string }[]
   highlights: { title: string; desc: string; icon: string }[]
   targetAudience: string[]
   speakers: ConferenceSpeaker[]
-  days: {
+  days?: {
     day: string
     dateLabel: string
     theme: string
@@ -42,6 +51,33 @@ const conferenceRichData: Record<string, ConferenceDetailsData> = {
     venueCity: 'London, United Kingdom',
     airport: 'London City Airport (LCY) & Heathrow (LHR)',
     hotelPartner: 'Novotel & Aloft London Docklands (Special Delegate Rate)',
+    about: {
+      leadIntro: 'ORIGIN Conferences International Conference on GNSC 2027 anticipates a huge number of participants from all around the globe with thought-provoking Keynote lectures, Oral and Poster presentations, Symposiums, and interactive clinical workshops.',
+      fullDescription: [
+        'GNSC 2027 will provide a unique integrated platform to discuss advancing knowledge in the fields of Nursing Education, Nursing Practice, Disaster Nursing, Paediatric Nursing, Midwifery, Clinical Nursing, Cardiovascular Nursing, Cancer and Tumour Nursing, Surgical Nursing, Neurological Nursing, Women\'s Health Nursing, Trauma & Critical Care Nursing, and Nursing Management.',
+        'This global congress will provide a distinctive forum to meet eminent personalities and experience inspiring talks in the field of nursing. There will be a great affiliation of healthcare scientists, professors, nurse practitioners, healthcare researchers, nurse associations, registered nurses, doctors, and faculty of nursing during exciting round-table discussions, question-answer sessions, and unique poster presentations which will help in the modernization and advancement of nursing education and healthcare innovations.'
+      ],
+      corePillarsHeading: 'Core Disciplines & Academic Scope',
+      corePillars: [
+        {
+          title: 'Clinical Nursing & Patient Safety Models',
+          desc: 'Advancing evidence-based clinical care protocols, patient safety models, chronic disease care, and decentralized nurse-led clinics.'
+        },
+        {
+          title: 'Nursing Education & Competency Reform',
+          desc: 'Revolutionizing nursing education with critical thinking, caring competency training, human resource management, and simulation research.'
+        },
+        {
+          title: 'Specialized Acute, Surgical & Oncology Care',
+          desc: 'Disaster and emergency triage algorithms, pediatric and neonatal ICU care, oncology immunotherapy management, and modern surgical nursing.'
+        },
+        {
+          title: 'Healthcare Informatics & Technology Integration',
+          desc: 'Bridging bedside practice with electronic health records, AI predictive diagnostics, patient satisfaction metrics, and clinical tele-nursing.'
+        }
+      ],
+      callout: 'A distinctive international forum dedicated to modernization, breakthrough research dissemination, and global clinical excellence.'
+    },
     speakers: [
       {
         name: 'Dr. Sarah Jenkins, PhD, RN',
@@ -133,6 +169,34 @@ const conferenceRichData: Record<string, ConferenceDetailsData> = {
     venueCity: 'Geneva, Switzerland',
     airport: 'Geneva Cointrin International Airport (GVA)',
     hotelPartner: 'InterContinental Geneva & Hotel President Wilson',
+    about: {
+      leadIntro: 'The International Conference on Global Business & Entrepreneurial Leadership (GWBEL 2027) aims to provide an in-depth introduction to the transformative power of entrepreneurship, the accessibility of start-ups, and lean start-up principles.',
+      fullDescription: [
+        'Members will engage in a hands-on exercise focused on rapid prototyping—a core concept within lean methodology. Delegates brainstorm early-stage business concepts and thoroughly investigate these ideas through the lean canvas framework. Informed by the preceding Lean Canvas exercise, teams will develop their business concepts and build a brief pitch to be delivered within their cohorts.',
+        'The conference will reinforce entrepreneurial concepts taught in marketing and business classes. Participation in this conference will help students and emerging professionals understand the concepts, processes, and skills associated with identifying new ideas, opportunities, and methods, and with creating or starting a new project or venture.',
+        'GWBEL 2027 warmly welcomes emerging leaders and entrepreneurs in marketing, finance, hospitality, and management in high schools, colleges, and venture accelerators around the globe. Join Global Business & Entrepreneurial Leadership for a better future today!'
+      ],
+      corePillarsHeading: 'Hands-on Venture Creation & Discovery Outcomes',
+      corePillars: [
+        {
+          title: 'Entrepreneurial Discovery Strategies',
+          desc: 'Employing structured discovery strategies to uncover unmet market opportunities and generate feasible ideas for business ventures.'
+        },
+        {
+          title: 'Lean Canvas & Rapid Prototyping',
+          desc: 'Hands-on prototyping exercises, lean canvas iteration, hypothesis testing, and constructing rapid minimum viable products.'
+        },
+        {
+          title: 'Venture Feasibility & Success Evaluation',
+          desc: 'Evaluating business concepts against rigorous market viability criteria, customer validation, and competitive positioning.'
+        },
+        {
+          title: 'Resource Allocation & Start-up Viability',
+          desc: 'Determining needed capital, technology stack, and human resources to ensure commercial viability and investor syndication readiness.'
+        }
+      ],
+      callout: 'Join Global Business & Entrepreneurial Leadership for a better future today!'
+    },
     speakers: [
       {
         name: 'Marcus Vance, MBA',
@@ -157,21 +221,26 @@ const conferenceRichData: Record<string, ConferenceDetailsData> = {
       }
     ],
     tracks: [
-      { id: 1, title: 'Developing Strategic Leadership Capabilities', category: 'Leadership', sessionFocus: 'Executive agility, decision making under uncertainty, and board dynamics.' },
-      { id: 2, title: 'Lean Startup Methodology & Rapid Prototyping', category: 'Entrepreneurship', sessionFocus: 'Minimum viable products, sprint cycles, and capital-efficient iteration.' },
-      { id: 3, title: 'Global Business Environments & Cross-Border Scaling', category: 'Strategy', sessionFocus: 'Tariff navigation, EU-US-Asia regulatory compliance, and market entry.' },
-      { id: 4, title: 'Leading Remote and Hybrid Global Teams', category: 'Management', sessionFocus: 'Asynchronous workflows, remote culture building, and distributed equity.' },
-      { id: 5, title: 'Technology Disruption & AI Transformation in Enterprise', category: 'Technology', sessionFocus: 'Generative AI deployment, workflow automation, and proprietary models.' },
-      { id: 6, title: 'Corporate Intrapreneurship & Innovation Engines', category: 'Strategy', sessionFocus: 'Spinouts, corporate venture capital (CVC), and incubation hubs.' },
-      { id: 7, title: 'Venture Capital, Seed Funding & Angel Syndicates', category: 'Finance', sessionFocus: 'Term sheet negotiation, cap table hygiene, and secondary market liquidity.' },
-      { id: 8, title: 'Cross-Cultural Management & Negotiations', category: 'Leadership', sessionFocus: 'Diplomatic consensus building, sovereign fund relations, and M&A.' },
-      { id: 9, title: 'Product-Market Fit Strategy for Emerging Markets', category: 'Growth', sessionFocus: 'Localization, localized pricing power, and distribution networks.' },
-      { id: 10, title: 'Digital Transformation & Cloud Enterprise Architecture', category: 'Technology', sessionFocus: 'Legacy modernization, zero-trust cybersecurity, and data pipelines.' },
-      { id: 11, title: 'Building Resilient and Scalable Organizational Cultures', category: 'Leadership', sessionFocus: 'Executive succession, psychological safety, and talent velocity.' },
-      { id: 12, title: 'ESG, Sustainable Business Models & Climate Governance', category: 'Strategy', sessionFocus: 'Carbon auditing, green bonds, and circular supply chain economics.' },
-      { id: 13, title: 'Strategic Talent Acquisition & Executive Retention', category: 'Management', sessionFocus: 'Executive compensation, vesting structures, and high-performance teams.' },
-      { id: 14, title: 'Crisis Leadership, Risk Mitigation & Continuity', category: 'Leadership', sessionFocus: 'Geopolitical contingency planning, liquidity buffers, and PR crisis comms.' },
-      { id: 15, title: 'Customer-Centric Innovation & Experience Design', category: 'Growth', sessionFocus: 'Net promoter economics, enterprise account retention, and product telemetry.' }
+      { id: 1, title: 'Entrepreneurial Leadership & Strategic Capabilities', category: 'Leadership', sessionFocus: 'Developing executive agility, strategic vision, and navigating market uncertainty.' },
+      { id: 2, title: 'Gender & Leadership in Global Business', category: 'Leadership', sessionFocus: 'Women in entrepreneurial leadership, diverse governance models, and executive parity.' },
+      { id: 3, title: 'Leadership & Management Styles in High-Growth Firms', category: 'Leadership', sessionFocus: 'Transformational vs. operational leadership, culture building, and team alignment.' },
+      { id: 4, title: 'Leadership for Sustainability & Climate Innovation', category: 'Sustainability', sessionFocus: 'Green business practices, circular economy models, and ESG compliance.' },
+      { id: 5, title: 'Leader’s Role in Innovation & Corporate Spin-Offs', category: 'Innovation', sessionFocus: 'Intrapreneurship, R&D commercialization, and incubation within established firms.' },
+      { id: 6, title: 'Leadership & Family Enterprise Continuity', category: 'Leadership', sessionFocus: 'Generational wealth transfer, family business governance, and conflict resolution.' },
+      { id: 7, title: 'Leading Change & Overcoming Communication Barriers', category: 'Management', sessionFocus: 'Change management methodologies, negotiation strategies, and organizational resilience.' },
+      { id: 8, title: 'Lean Startup Principles & Rapid Prototyping', category: 'Entrepreneurship', sessionFocus: 'Lean Canvas design, rapid iteration, MVP building, and customer discovery.' },
+      { id: 9, title: 'Social & Clean Green Entrepreneurship Prospects', category: 'Entrepreneurship', sessionFocus: 'Impact investing, mission-driven ventures, and sustainable social enterprise models.' },
+      { id: 10, title: 'R&D Transfer & Business Incubator Ecosystems', category: 'Innovation', sessionFocus: 'University lab spinouts, technology transfer, and startup incubator frameworks.' },
+      { id: 11, title: 'Entrepreneurship among Marginalized Groups & Regional Growth', category: 'Growth', sessionFocus: 'Inclusive entrepreneurship, rural economic development, and economic empowerment.' },
+      { id: 12, title: 'Agri-Business & Agri-Preneurship Development', category: 'Growth', sessionFocus: 'Agricultural supply chain innovation, food-tech startups, and rural value addition.' },
+      { id: 13, title: 'Venture Capital & Angel Funding for New Ventures', category: 'Finance', sessionFocus: 'Seed syndicates, term sheet negotiation, cap tables, and early-stage equity.' },
+      { id: 14, title: 'Banking, Capital Market Dynamism & Foreign Direct Investment (FDI)', category: 'Finance', sessionFocus: 'Commercial bank funding, IPO readiness, cross-border capital, and global FDI flows.' },
+      { id: 15, title: 'Natural Resources & Sustainable Venture Opportunities', category: 'Sustainability', sessionFocus: 'Clean energy transition, resource efficiency, and sustainable extraction ventures.' },
+      { id: 16, title: 'Cross-Cultural Management & Global Competitiveness', category: 'Strategy', sessionFocus: 'International market expansion, cross-border M&A, and intercultural negotiations.' },
+      { id: 17, title: 'Entrepreneurship Education from Early-Stage to University', category: 'Education', sessionFocus: 'Creating entrepreneurial mindsets in colleges, universities, and incubator programs.' },
+      { id: 18, title: 'Data Analytics & Software Tools for Entrepreneurs', category: 'Technology', sessionFocus: 'Business intelligence, automated workflows, SaaS adoption, and predictive data modeling.' },
+      { id: 19, title: 'E-Governance, Digital Infrastructure & New Ventures', category: 'Technology', sessionFocus: 'Digital public infrastructure, paperless compliance, and e-governance solutions.' },
+      { id: 20, title: 'Government Policies, Programs & Subsidies for SMEs', category: 'Policy', sessionFocus: 'Government grant programs, startup tax incentives, and public-private partnerships.' }
     ],
     highlights: [
       { title: 'Global Executive Keynotes', desc: 'Direct strategic playbooks from unicorn founders, venture capital partners, and multinational CEOs.', icon: 'Award' },
@@ -221,6 +290,33 @@ const conferenceRichData: Record<string, ConferenceDetailsData> = {
     venueCity: 'Paris, France',
     airport: 'Paris Charles de Gaulle (CDG) & Orly (ORY)',
     hotelPartner: 'Hyatt Regency Paris Étoile & Le Méridien (Delegate Block)',
+    about: {
+      leadIntro: 'ORIGIN Conferences - International Conference on WEDC 2027 is a phenomenal occasion which features exciting speakers, hands-on clinical sessions, and the application of cutting-edge exploration discoveries across modern dentistry.',
+      fullDescription: [
+        'The congress is dedicated to discoveries and clinical techniques identified with Prosthodontics, Oral Surgery, Cosmetic Dentistry, Periodontology, Oral Wellbeing, Oral Cancer, Orthodontics, Periodontics, Endodontics, Forensic Dentistry or Odontology, and Future Trends in Dentistry.',
+        'Dentistry and Oral Health Summit-2027 welcomes members from every single driving University, clinical exploration establishment, and diagnostic organization to give the world a huge platform to discuss and explore unique results, recent technological advancements, new dental strategies, and innovations—showcasing them for the benefit of the world population.'
+      ],
+      corePillarsHeading: 'Clinical Exploration & Diagnostic Scope',
+      corePillars: [
+        {
+          title: 'Prosthodontics, Aesthetics & Cosmetic Dentistry',
+          desc: 'Full-arch rehabilitation, porcelain veneers, aesthetic smile design, occlusion management, and minimally invasive restorative therapies.'
+        },
+        {
+          title: 'Digital Dentistry, 3D CAD/CAM & Intraoral Scanning',
+          desc: 'Digital workflow integration, chairside 3D milling, guided implant surgery, and cloud-synchronized dental laboratory coordination.'
+        },
+        {
+          title: 'Laser Dentistry & Advanced Endodontics',
+          desc: 'Hard and soft tissue laser therapies, rotary NiTi instrumentation, bioceramic obturation, and periodontal tissue regeneration.'
+        },
+        {
+          title: 'Universities & Clinical Exploration Network',
+          desc: 'Collaborative alliances connecting university dental faculties, hospital surgeons, and diagnostic manufacturers to elevate population health.'
+        }
+      ],
+      callout: 'A huge global platform welcoming driving universities, clinical exploration establishments, and diagnostic organizations to benefit world population.'
+    },
     speakers: [
       {
         name: 'Dr. Alain Dupont, DDS, PhD',
@@ -691,38 +787,96 @@ export default function ConferenceDetailsPage({
           <main className="space-y-20 lg:col-span-8">
             {/* 1. OVERVIEW & CONGRESS VISION */}
             <section id="overview" className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 sm:p-12 shadow-2xl backdrop-blur-xl">
-              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-400">
-                <Sparkles size={16} /> Congress Vision &amp; Objectives
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                  <Sparkles size={16} /> Official Congress Overview &amp; Mandate
+                </div>
+                <span className="rounded-full bg-amber-400/15 px-3 py-1 text-[11px] font-mono font-bold text-amber-300 border border-amber-400/30">
+                  {conference.id.toUpperCase()} • Accredited 2027 Edition
+                </span>
               </div>
-              <h2 className="mt-2 font-display text-3xl font-extrabold text-white sm:text-4xl">
+
+              <h2 className="mt-3 font-display text-3xl font-extrabold text-white sm:text-4xl">
                 About the Congress
               </h2>
-              <div className="mt-4 h-1 w-16 rounded-full bg-amber-400" />
-              <p className="mt-6 text-base sm:text-lg leading-relaxed text-slate-200 font-normal">
-                {conference.description}
-              </p>
-              <p className="mt-4 text-sm leading-relaxed text-slate-300">
-                This international congress brings together university professors, chief hospital clinicians, and research fellows. Presentations encompass peer-reviewed scientific abstracts, clinical care protocols, and policy transformations.
-              </p>
+              <div className="mt-4 h-1 w-20 rounded-full bg-amber-400" />
 
-              {/* 4 Pillars Grid with Glowing Accent */}
-              <div className="mt-10 grid gap-5 sm:grid-cols-2">
-                {rich.highlights.map((h, i) => (
-                  <div key={i} className="group rounded-2xl border border-white/5 bg-slate-950/70 p-6 transition-all duration-300 hover:border-amber-400/40 hover:bg-slate-950">
-                    <div className="flex items-center gap-3">
-                      <span className="grid h-8 w-8 place-items-center rounded-xl bg-amber-400/20 text-xs font-black text-amber-400 font-mono">
-                        0{i + 1}
-                      </span>
-                      <h3 className="font-display text-sm font-bold text-white group-hover:text-amber-300 transition">
-                        {h.title}
-                      </h3>
-                    </div>
-                    <p className="mt-3 text-xs leading-relaxed text-slate-400 group-hover:text-slate-300 transition">
-                      {h.desc}
-                    </p>
-                  </div>
+              {/* Lead Highlighted Narrative Box */}
+              <div className="mt-6 rounded-2xl bg-gradient-to-r from-amber-400/10 via-amber-500/5 to-transparent p-6 border-l-4 border-amber-400 border-y border-r border-white/10">
+                <p className="text-base sm:text-lg leading-relaxed text-amber-200 font-medium">
+                  {rich.about.leadIntro}
+                </p>
+              </div>
+
+              {/* Full Multi-Paragraph Detailed Narrative from Doc */}
+              <div className="mt-6 space-y-4 text-sm sm:text-base leading-relaxed text-slate-200">
+                {rich.about.fullDescription.map((paragraph, idx) => (
+                  <p key={idx} className="leading-relaxed">
+                    {paragraph}
+                  </p>
                 ))}
               </div>
+
+              {/* Core Congress Objectives & Learning Pillars from Doc */}
+              <div className="mt-10 rounded-2xl bg-slate-950/80 p-6 sm:p-8 border border-white/10">
+                <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-400">
+                  <CheckCircle2 size={16} />
+                  <span>{rich.about.corePillarsHeading}</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  Core competencies, strategic methodologies, and academic agenda streams established in the official congress prospectus.
+                </p>
+
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  {rich.about.corePillars.map((p, i) => (
+                    <div key={i} className="rounded-xl bg-slate-900/90 p-5 border border-white/5 hover:border-amber-400/30 transition">
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid h-6 w-6 place-items-center rounded-lg bg-amber-400/20 text-xs font-black text-amber-400 font-mono">
+                          0{i + 1}
+                        </span>
+                        <h4 className="font-display text-sm font-bold text-white">{p.title}</h4>
+                      </div>
+                      <p className="mt-2 text-xs leading-relaxed text-slate-400">{p.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4 Summit Experience Highlights */}
+              <div className="mt-10">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-2 mb-4">
+                  <Award size={16} /> Summit Format &amp; Delegate Experience
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {rich.highlights.map((h, i) => (
+                    <div key={i} className="group rounded-2xl border border-white/5 bg-slate-950/70 p-5 transition-all duration-300 hover:border-amber-400/40 hover:bg-slate-950">
+                      <div className="flex items-center gap-3">
+                        <span className="grid h-8 w-8 place-items-center rounded-xl bg-amber-400/20 text-xs font-black text-amber-400 font-mono">
+                          0{i + 1}
+                        </span>
+                        <h4 className="font-display text-sm font-bold text-white group-hover:text-amber-300 transition">
+                          {h.title}
+                        </h4>
+                      </div>
+                      <p className="mt-2.5 text-xs leading-relaxed text-slate-400 group-hover:text-slate-300 transition">
+                        {h.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Callout Quote / Mission Banner from Doc */}
+              {rich.about.callout && (
+                <div className="mt-8 rounded-2xl bg-gradient-to-r from-amber-400/15 via-amber-500/10 to-transparent p-5 border border-amber-400/30 flex items-center gap-4">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-400 text-navy-950 flex-shrink-0">
+                    <Sparkles size={20} />
+                  </div>
+                  <p className="text-sm font-semibold text-amber-200 italic">
+                    "{rich.about.callout}"
+                  </p>
+                </div>
+              )}
             </section>
 
             {/* 2. OFFICIAL SCIENTIFIC TRACKS EXPLORER */}

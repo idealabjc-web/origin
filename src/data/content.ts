@@ -53,7 +53,7 @@ export const conferences: Conference[] = [
     category: 'Healthcare & Life Sciences',
     date: '2027 (Dates to be announced)',
     location: 'London, UK / Hybrid',
-    description: 'An international integrated congress advancing clinical nursing, pediatric care, oncology nursing, patient safety models, and modern nursing education with world-leading healthcare scientists.',
+    description: 'An international integrated congress anticipating participants from across the globe with thought-provoking Keynote lectures, Oral and Poster presentations, and clinical workshops across Nursing Education, Clinical Practice, Pediatrics, Midwifery, Oncology, and Emergency Care.',
     image: u('photo-1576091160399-112ba8d25d1d', 900),
     href: '#conferences'
   },
@@ -63,7 +63,7 @@ export const conferences: Conference[] = [
     category: 'Business & Leadership',
     date: '2027 (Dates to be announced)',
     location: 'Geneva, Switzerland / Hybrid',
-    description: 'Empowering emerging leaders and entrepreneurs through lean startup methodology, venture capital, strategic leadership, rapid prototyping, and digital market transformation.',
+    description: 'A global congress introducing the transformative power of entrepreneurship, startup accessibility, lean startup principles, and hands-on rapid prototyping to empower emerging leaders in marketing, finance, and management.',
     image: u('photo-1556761175-5973dc0f32e7', 900),
     href: '#conferences'
   },
@@ -73,7 +73,7 @@ export const conferences: Conference[] = [
     category: 'Healthcare & Life Sciences',
     date: '2027 (Dates to be announced)',
     location: 'Paris, France / Hybrid',
-    description: 'A phenomenal summit uniting world leaders in Prosthodontics, Digital Dentistry, Oral Surgery, Laser & Aesthetic Dentistry, Implantology, and Dental Practice Management.',
+    description: 'A phenomenal international occasion featuring exciting speakers, hands-on clinical sessions, and cutting-edge discoveries across Prosthodontics, Digital Dentistry, Oral Surgery, Laser & Aesthetic Dentistry, and Implantology.',
     image: u('photo-1629909613654-28e377c37b09', 900),
     href: '#conferences'
   }
