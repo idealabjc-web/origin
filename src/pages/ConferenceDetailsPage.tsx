@@ -577,9 +577,13 @@ export default function ConferenceDetailsPage({
 
         <button
           onClick={onHome || handleBack}
-          className="font-display text-xl sm:text-2xl font-black tracking-tight text-white hover:text-white/90 transition hidden sm:flex items-center"
+          className="group hidden sm:flex items-center gap-2 transition cursor-pointer"
         >
-          ORIGIN<span className="text-amber-400"> Conferences</span>
+          <img
+            src="/origin-logo.png"
+            alt="ORIGIN Global Conferences"
+            className="h-9 sm:h-11 w-auto object-contain transition-transform group-hover:scale-105"
+          />
         </button>
 
         <div className="flex items-center gap-3">

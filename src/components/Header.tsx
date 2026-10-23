@@ -44,9 +44,13 @@ export default function Header({
         <a
           href="/"
           onClick={(e) => handleNav('/', e)}
-          className="font-display text-2xl font-bold tracking-tight text-white cursor-pointer"
+          className="flex items-center gap-2 cursor-pointer group py-1"
         >
-          ORIGIN<span className="text-gold"> Conferences</span>
+          <img
+            src="/origin-logo.png"
+            alt="ORIGIN Global Conferences"
+            className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+          />
         </a>
 
         <nav aria-label="Main" className="hidden items-center gap-7 lg:flex">

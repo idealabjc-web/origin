@@ -5,10 +5,14 @@ export default function Footer() {
     <footer className="bg-navy-950 pt-16 text-sm text-white/70">
       <div className="container-x grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <p className="font-display text-2xl font-bold text-white">
-            ORIGIN<span className="text-gold"> Conferences</span>
-          </p>
-          <p className="mt-4">
+          <a href="/" className="inline-block group mb-3">
+            <img
+              src="/origin-logo.png"
+              alt="ORIGIN Global Conferences"
+              className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+            />
+          </a>
+          <p className="mt-2 text-xs leading-relaxed text-slate-300">
             A conference and event services provider connecting professionals through knowledge sharing and networking.
           </p>
         </div>
