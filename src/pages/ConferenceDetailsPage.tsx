@@ -4,7 +4,7 @@ import {
   ArrowLeft, CalendarDays, MapPin, CheckCircle2, AlertCircle,
   Layers, Award, Globe, Users, Check, ShieldCheck, Mail,
   Sparkles, Search, Share2, Ticket, ChevronRight, Building2,
-  Plane, Hotel, UserCheck
+  Plane, Hotel, UserCheck, LayoutGrid, Tag
 } from 'lucide-react'
 import { conferences, type Conference } from '../data/content'
 import { submitEventRegistration, isSupabaseConfigured } from '../lib/supabase'
@@ -102,24 +102,30 @@ const conferenceRichData: Record<string, ConferenceDetailsData> = {
       }
     ],
     tracks: [
-      { id: 1, title: 'Nursing Education and Pedagogical Research', category: 'Education', sessionFocus: 'Curriculum transformation, clinical competency assessment, and simulation labs.' },
-      { id: 2, title: 'Clinical Nursing & Next-Gen Patient Care Models', category: 'Clinical', sessionFocus: 'Decentralized care protocols, nurse-led clinics, and bedside decision support.' },
-      { id: 3, title: 'Pediatric Nursing & Child Healthcare Systems', category: 'Clinical', sessionFocus: 'Neonatal intensive care, pediatric pain management, and family-centered triage.' },
-      { id: 4, title: 'Pregnancy, Perinatal Care & Modern Midwifery', category: 'Clinical', sessionFocus: 'High-risk obstetrics, perinatal mental health, and community maternal health.' },
-      { id: 5, title: 'Cancer and Tumour Nursing Innovations', category: 'Oncology', sessionFocus: 'Immunotherapy side-effect management, oncology clinical trials, and hospice care.' },
-      { id: 6, title: 'Critical Care & Emergency Trauma Nursing', category: 'Emergency', sessionFocus: 'Disaster triage algorithms, ICU hemodynamic monitoring, and acute resuscitation.' },
-      { id: 7, title: 'Healthcare Informatics & AI in Bedside Practice', category: 'Informatics', sessionFocus: 'EHR predictive analytics, wearable vital monitors, and clinical tele-nursing.' },
-      { id: 8, title: 'Innovations in Chronic Disease Management', category: 'Clinical', sessionFocus: 'Cardiometabolic pathways, dialysis care coordination, and mobile health apps.' },
-      { id: 9, title: 'Critical Thinking & Caring Competency Training', category: 'Education', sessionFocus: 'Cognitive bias mitigation in emergency care and multidisciplinary ward rounds.' },
-      { id: 10, title: 'Quality, Safety and Clinical Governance Frameworks', category: 'Management', sessionFocus: 'Hospital-acquired infection reduction, root cause analysis, and patient advocacy.' },
-      { id: 11, title: 'Crisis and Risk Management in Primary Care', category: 'Management', sessionFocus: 'Epidemic surveillance, primary triage surge capacity, and clinician burnout prevention.' },
-      { id: 12, title: 'Community Health Nursing and Global Public Health', category: 'Public Health', sessionFocus: 'Vaccine distribution logistics, rural healthcare access, and epidemiological tracking.' },
-      { id: 13, title: 'Geriatric & Palliative Care Nursing Paradigms', category: 'Clinical', sessionFocus: 'Dementia care pathways, frailty assessments, and ethical end-of-life decision making.' },
-      { id: 14, title: 'Heart & Cardiovascular Nursing Interventions', category: 'Clinical', sessionFocus: 'Post-CABG recovery protocols, cardiac catheterization nursing, and arrhythmia triage.' },
-      { id: 15, title: 'Psychiatric and Mental Health Nursing Practices', category: 'Clinical', sessionFocus: 'Inpatient psychiatric crisis stabilization, dual diagnosis, and trauma-informed therapies.' },
-      { id: 16, title: 'Surgical Nursing & Post-Operative ERAS Protocols', category: 'Clinical', sessionFocus: 'Enhanced recovery after surgery (ERAS), wound dehiscence prevention, and sepsis alerts.' },
-      { id: 17, title: 'Nursing Ethics, Hospice and Supportive Care Systems', category: 'Management', sessionFocus: 'Bioethics in life support withdrawal, moral distress mitigation, and patient dignity.' },
-      { id: 18, title: 'Practice Model Reform & Delegate Leadership', category: 'Management', sessionFocus: 'Nurse executive leadership, hospital board representation, and retention strategies.' }
+      { id: 1, title: 'Nursing Education and Research', category: 'Education', sessionFocus: 'Curriculum transformation, pedagogical innovations, clinical competency assessment, and academic research.' },
+      { id: 2, title: 'Clinical Nursing & Next-Gen Patient Care Models', category: 'Clinical', sessionFocus: 'Evidence-based bedside nursing protocols, acute care pathways, and clinical decision support systems.' },
+      { id: 3, title: 'Pediatric Nursing & Child Healthcare Systems', category: 'Pediatrics', sessionFocus: 'Neonatal intensive care units (NICU), pediatric triage, pain management, and family-centered pediatric care.' },
+      { id: 4, title: 'Pregnancy, Perinatal Care & Modern Midwifery', category: 'Maternal Care', sessionFocus: 'High-risk obstetrics, perinatal care, physiological birth models, and community maternal health support.' },
+      { id: 5, title: 'Cancer and Tumour Nursing Innovations', category: 'Oncology', sessionFocus: 'Chemotherapy and immunotherapy symptom management, surgical oncology care, and palliative oncology.' },
+      { id: 6, title: 'Critical Care & Emergency Trauma Nursing', category: 'Critical Care', sessionFocus: 'Advanced resuscitation protocols, invasive hemodynamic monitoring, sepsis alerts, and emergency triage.' },
+      { id: 7, title: 'Nursing Practice and Informatics', category: 'Informatics', sessionFocus: 'Clinical electronic health records (EHR), AI bedside decision tools, wearable vitals, and telehealth.' },
+      { id: 8, title: 'Innovations in Patient Care', category: 'Clinical', sessionFocus: 'Patient-centric care models, decentralized nurse-led clinics, and point-of-care diagnostics.' },
+      { id: 9, title: 'Nursing Practice Model Reform', category: 'Leadership', sessionFocus: 'Shared governance, clinician retention frameworks, modern shift structuring, and nurse executive leadership.' },
+      { id: 10, title: 'Care of Patients with Chronic Disease', category: 'Clinical', sessionFocus: 'Cardiometabolic pathway management, chronic kidney dialysis care, and mobile health self-care programs.' },
+      { id: 11, title: 'Critical Thinking and Caring Competency Training', category: 'Education', sessionFocus: 'Mitigating clinical cognitive bias, simulation-based emergency training, and human caring models.' },
+      { id: 12, title: 'Human Resource Management in Healthcare', category: 'Management', sessionFocus: 'Staffing ratio optimization, mitigating nursing burnout, clinical onboarding, and workforce retention.' },
+      { id: 13, title: 'Quality and Safety of Nursing Care', category: 'Governance', sessionFocus: 'Hospital-acquired infection mitigation, medication reconciliation, falls reduction, and clinical audits.' },
+      { id: 14, title: 'Crisis and Risk Management in Primary Care Nursing', category: 'Critical Care', sessionFocus: 'Epidemic outbreak readiness, clinic surge capacity, primary triage, and clinical escalation protocols.' },
+      { id: 15, title: 'Information Technology in Nursing', category: 'Informatics', sessionFocus: 'Interoperable health data exchanges, automated barcoding administration, and digital nursing documentation.' },
+      { id: 16, title: 'Nursing Care and Patient Satisfaction', category: 'Clinical', sessionFocus: 'Measuring HCAHPS patient experience scores, empathetic communication, and culturally competent care.' },
+      { id: 17, title: 'Recent Advances in Nursing Research', category: 'Education', sessionFocus: 'Translational nurse-led clinical trials, qualitative patient studies, and mixed-method health research.' },
+      { id: 18, title: 'Community Health Nursing and Global Public Health', category: 'Public Health', sessionFocus: 'Preventive immunization campaigns, urban epidemiology, social determinants of health, and rural clinics.' },
+      { id: 19, title: 'Geriatric and Elderly Nursing', category: 'Geriatrics', sessionFocus: 'Dementia care pathways, multi-morbidity management, frailty syndromes, and falls prevention.' },
+      { id: 20, title: 'Heart & Cardiovascular Nursing', category: 'Cardiovascular', sessionFocus: 'Arrhythmia telemetry monitoring, cardiac catheterization lab care, heart failure, and post-CABG recovery.' },
+      { id: 21, title: 'Psychiatric and Mental Health Nursing', category: 'Mental Health', sessionFocus: 'Acute psychiatric stabilization, trauma-informed care, dual diagnosis therapies, and de-escalation.' },
+      { id: 22, title: 'Surgical Nursing & Operative Care', category: 'Surgical', sessionFocus: 'Enhanced Recovery After Surgery (ERAS), operating theatre sterile technique, and wound dehiscence care.' },
+      { id: 23, title: 'Nursing Ethics, Hospice and Palliative Care', category: 'Ethics & Palliative', sessionFocus: 'Bioethics in end-of-life decisions, pain symptom alleviation, moral distress, and bereavement support.' },
+      { id: 24, title: 'Disaster Nursing & Mass Casualty Triage', category: 'Critical Care', sessionFocus: 'Disaster preparedness, START triage algorithm execution, surge resource allocation, and field clinics.' }
     ],
     highlights: [
       { title: 'Visionary Healthcare Keynotes', desc: 'World-renowned healthcare scientists and clinical professors delivering visionary talks on next-generation care models.', icon: 'Award' },
@@ -240,7 +246,17 @@ const conferenceRichData: Record<string, ConferenceDetailsData> = {
       { id: 17, title: 'Entrepreneurship Education from Early-Stage to University', category: 'Education', sessionFocus: 'Creating entrepreneurial mindsets in colleges, universities, and incubator programs.' },
       { id: 18, title: 'Data Analytics & Software Tools for Entrepreneurs', category: 'Technology', sessionFocus: 'Business intelligence, automated workflows, SaaS adoption, and predictive data modeling.' },
       { id: 19, title: 'E-Governance, Digital Infrastructure & New Ventures', category: 'Technology', sessionFocus: 'Digital public infrastructure, paperless compliance, and e-governance solutions.' },
-      { id: 20, title: 'Government Policies, Programs & Subsidies for SMEs', category: 'Policy', sessionFocus: 'Government grant programs, startup tax incentives, and public-private partnerships.' }
+      { id: 20, title: 'Government Policies, Programs & Subsidies for SMEs', category: 'Policy', sessionFocus: 'Government grant programs, startup tax incentives, and public-private partnerships.' },
+      { id: 21, title: 'Corporate Innovativeness & Internal Spin-Offs', category: 'Innovation', sessionFocus: 'Corporate Venture Capital (CVC) models, equity partnerships, and commercializing corporate patents.' },
+      { id: 22, title: 'Entrepreneurial Learning & Skill Acquisition', category: 'Education', sessionFocus: 'Action-oriented entrepreneurial pedagogy, experiential incubators, and student founder training.' },
+      { id: 23, title: 'Family Business, Wealth Transfer & Board Dynamics', category: 'Leadership', sessionFocus: 'Generational wealth transition, family councils, liquidity events, and board governance.' },
+      { id: 24, title: 'Entrepreneurial Marketing & Product-Market Fit', category: 'Growth', sessionFocus: 'Lean product-market fit discovery, organic CAC reduction, viral loops, and brand positioning.' },
+      { id: 25, title: 'Startup Incubators & Venture Runway Viability', category: 'Entrepreneurship', sessionFocus: 'Cohort selection, mentorship networks, seed incubation runways, and investor matching.' },
+      { id: 26, title: 'Technology Education & University Startup Support', category: 'Education', sessionFocus: 'Campus entrepreneurship centers, student founder venture funds, and technology transfer.' },
+      { id: 27, title: 'New Venture & Wealth Creation through Tourism & Hospitality', category: 'Growth', sessionFocus: 'Eco-tourism ventures, hospitality tech, cultural entrepreneurship, and destination business scaling.' },
+      { id: 28, title: 'Industry & SME Strategic Trade Policies', category: 'Policy', sessionFocus: 'Trade agreements, cross-border regulatory harmonization, export promotion, and supply chain incentives.' },
+      { id: 29, title: 'Capital Market Dynamism, IPOs & Secondary Liquidity', category: 'Finance', sessionFocus: 'SPACs, pre-IPO financing rounds, secondary share sales, and public equity liquidity.' },
+      { id: 30, title: 'Software Tools, AI Automation & Digital Workflows', category: 'Technology', sessionFocus: 'Generative AI business adoption, automated CRM pipelines, cloud economics, and remote workflow stacks.' }
     ],
     highlights: [
       { title: 'Global Executive Keynotes', desc: 'Direct strategic playbooks from unicorn founders, venture capital partners, and multinational CEOs.', icon: 'Award' },
@@ -341,24 +357,30 @@ const conferenceRichData: Record<string, ConferenceDetailsData> = {
       }
     ],
     tracks: [
-      { id: 1, title: 'Dental Public Health & Community Oral Care', category: 'Public Health', sessionFocus: 'Epidemiology, caries prevention, and fluoridation protocols.' },
-      { id: 2, title: 'Advanced Endodontics & Root Canal Technologies', category: 'Endodontics', sessionFocus: 'NiTi rotary instrumentation, bioceramic obturation, and apex locators.' },
-      { id: 3, title: 'Forensic Odontology & Legal Identification', category: 'Pathology', sessionFocus: 'Mass disaster victim identification and bite-mark analysis standards.' },
-      { id: 4, title: 'Dental Materials, Ceramics & Biomaterial Science', category: 'Materials', sessionFocus: 'Zirconia sintering, lithium disilicate bonding, and nano-composites.' },
-      { id: 5, title: 'Orthodontics & Clear Aligner Biomechanics', category: 'Orthodontics', sessionFocus: 'Digital staging, attachment biomechanics, and accelerated tooth movement.' },
-      { id: 6, title: 'Digital Dentistry, 3D Intraoral Scanning & CAD/CAM', category: 'Digital', sessionFocus: 'Chairside milling, digital impressions, and cloud dental laboratory sync.' },
-      { id: 7, title: 'Oral Cancer, Oncology & Maxillofacial Pathology', category: 'Oncology', sessionFocus: 'Early diagnostic biopsies, HPV-related malignancies, and reconstruction.' },
-      { id: 8, title: 'Prosthodontics, Full-Arch Restorations & Aesthetics', category: 'Prosthodontics', sessionFocus: 'All-on-X planning, vertical dimension restoration, and smile design.' },
-      { id: 9, title: 'Periodontology & Guided Tissue Regeneration', category: 'Periodontics', sessionFocus: 'Membrane barrier techniques, PRF/PRP biologics, and peri-implantitis.' },
-      { id: 10, title: 'Pediatric Dentistry & Preventive Interventions', category: 'Pediatrics', sessionFocus: 'Early interceptive orthodontics, pulp therapy, and behavior management.' },
-      { id: 11, title: 'Dental Practice Management & Clinic Marketing', category: 'Management', sessionFocus: 'Patient retention economics, clinic ergonomics, and staff delegation.' },
-      { id: 12, title: 'Geriatric Dentistry & Medically Complex Patients', category: 'Clinical', sessionFocus: 'Polypharmacy interactions, xerostomia management, and wheelchair access.' },
-      { id: 13, title: 'Laser Dentistry & Minimally Invasive Therapies', category: 'Technology', sessionFocus: 'Diode & Er:YAG lasers in soft-tissue crown lengthening and debridement.' },
-      { id: 14, title: 'Cosmetic Dentistry, Smile Design & Porcelain Veneers', category: 'Aesthetics', sessionFocus: 'Minimally invasive prep design, color matching, and cementation.' },
-      { id: 15, title: 'Dental Biomaterials & Nano-Hydroxyapatite Science', category: 'Materials', sessionFocus: 'Enamel remineralization, bioactive glass, and resin-dentin hybridization.' },
-      { id: 16, title: 'Dental Hygiene, Biofilm Control & Guided Biofilm Therapy', category: 'Hygiene', sessionFocus: 'Air-polishing airflow technologies, ultrasonic instrumentation, and home care.' },
-      { id: 17, title: 'Implantology, Guided Surgery & Sinus Augmentation', category: 'Surgery', sessionFocus: '3D surgical guides, immediate loading, and lateral window sinus elevation.' },
-      { id: 18, title: 'Temporomandibular Disorders & Occlusal Rehabilitation', category: 'Prosthodontics', sessionFocus: 'Splint therapy, digital jaw tracking, and full-mouth rehabilitation.' }
+      { id: 1, title: 'Laser Dentistry', category: 'Technology', sessionFocus: 'Clinical applications of diode and Er:YAG lasers in hard and soft tissue crown lengthening and peri-implantitis.' },
+      { id: 2, title: 'Aesthetic Dentistry', category: 'Aesthetics', sessionFocus: 'Minimally invasive composite veneers, smile design protocols, ceramic bonding, and shade matching.' },
+      { id: 3, title: 'Dental Materials', category: 'Materials', sessionFocus: 'Zirconia sintering, lithium disilicate ceramics, bioactive glass, and resin-dentin hybridization.' },
+      { id: 4, title: 'Digital Dentistry', category: 'Digital', sessionFocus: 'Intraoral scanning accuracy, chairside 3D milling, 3D printing resins, and cloud lab synchronization.' },
+      { id: 5, title: 'TMD, Sleep Disorders, Obstructive Sleep Apnea and Snoring', category: 'Clinical', sessionFocus: 'Mandibular advancement devices (MAD), sleep apnea polysomnography, and TMJ splint rehabilitation.' },
+      { id: 6, title: 'Periodontics', category: 'Periodontics', sessionFocus: 'Periodontal regeneration with PRF/PRP biologics, bone grafting matrices, and surgical debridement.' },
+      { id: 7, title: 'Prosthodontics', category: 'Prosthodontics', sessionFocus: 'All-on-X surgical planning, vertical dimension reconstruction, and fixed implant prosthetics.' },
+      { id: 8, title: 'Orthodontics', category: 'Orthodontics', sessionFocus: 'Digital staging algorithms, aligner attachment mechanics, and accelerated tooth movement.' },
+      { id: 9, title: 'Implant Dentistry', category: 'Surgery', sessionFocus: 'Computer-guided static & dynamic implant navigation, immediate loading protocols, and sinus elevations.' },
+      { id: 10, title: 'Dental Science Research', category: 'Research', sessionFocus: 'Translational oral research, salivary biomarker diagnostics, and tissue engineering.' },
+      { id: 11, title: 'Advances in Dentistry', category: 'Technology', sessionFocus: 'AI-assisted caries detection, robotic dental surgery, and nanodentistry applications.' },
+      { id: 12, title: 'Preventive Dentistry', category: 'Public Health', sessionFocus: 'Community fluoridation, remineralization therapies, biofilm control, and oral health literacy.' },
+      { id: 13, title: 'Oral Cancer', category: 'Oncology', sessionFocus: 'Early diagnostic biopsies, HPV-associated lesions, oral squamous cell carcinoma, and surgical resection.' },
+      { id: 14, title: 'Endodontics', category: 'Endodontics', sessionFocus: 'Rotary NiTi file metallurgy, bioceramic hydraulic sealers, and surgical apicoectomy.' },
+      { id: 15, title: 'Forensic Dentistry', category: 'Pathology', sessionFocus: 'Disaster victim identification (DVI), bite-mark photographic analysis, and legal post-mortem forensics.' },
+      { id: 16, title: 'Dental Sleep Medicine', category: 'Clinical', sessionFocus: 'Interdisciplinary sleep medicine management, snoring appliance fabrication, and airway patency.' },
+      { id: 17, title: 'Cosmetic Dentistry', category: 'Aesthetics', sessionFocus: 'Enamel microabrasion, professional in-office bleaching, gum contouring, and aesthetic veneer bonding.' },
+      { id: 18, title: 'Pediatric Dentistry', category: 'Pediatrics', sessionFocus: 'Behavior guidance techniques, primary tooth pulp therapy, and space maintainers.' },
+      { id: 19, title: 'Dental Nursing', category: 'Clinical', sessionFocus: 'Four-handed dentistry ergonomics, surgical scrub nursing, and infection control compliance.' },
+      { id: 20, title: 'Dental Care', category: 'Hygiene', sessionFocus: 'Guided Biofilm Therapy (GBT), ultrasonic air-polishing, and periodontal maintenance recalls.' },
+      { id: 21, title: 'Dental Cavities', category: 'Clinical', sessionFocus: 'Silver diamine fluoride (SDF) arrest, selective caries removal, and glass ionomer restorations.' },
+      { id: 22, title: 'Dental Surgery', category: 'Surgery', sessionFocus: 'Complex impacted third molar extractions, cyst enucleations, and orthognathic surgical planning.' },
+      { id: 23, title: 'Dental Practice Management', category: 'Management', sessionFocus: 'Clinic operational efficiency, dental staffing retention, appointment scheduling, and fee structuring.' },
+      { id: 24, title: 'Dental Marketing', category: 'Management', sessionFocus: 'Digital dental presence, transparent treatment plan presentations, and patient loyalty programs.' }
     ],
     highlights: [
       { title: 'Live Clinical Demonstrations', desc: 'High-definition closed-circuit broadcasts of advanced full-arch implant placement and guided bone augmentation.', icon: 'Award' },
@@ -466,6 +488,7 @@ export default function ConferenceDetailsPage({
 
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState<string>('All')
+  const [viewMode, setViewMode] = useState<'grid' | 'cloud'>('grid')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [org, setOrg] = useState('')
@@ -477,6 +500,11 @@ export default function ConferenceDetailsPage({
   const rich = conferenceRichData[conference.id] || conferenceRichData['gnsc-2027']
 
   const categories = ['All', ...Array.from(new Set(rich.tracks.map((t) => t.category)))]
+
+  const categoryCounts = rich.tracks.reduce((acc, t) => {
+    acc[t.category] = (acc[t.category] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
 
   const filteredTracks = rich.tracks
     .filter((t) => activeCategory === 'All' || t.category === activeCategory)
@@ -576,7 +604,7 @@ export default function ConferenceDetailsPage({
         <div className="container-x flex items-center justify-between">
           <div className="flex items-center gap-1 text-xs font-semibold text-slate-300">
             <a href="#overview" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Overview</a>
-            <a href="#tracks" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Scientific Tracks ({rich.tracks.length})</a>
+            <a href="#tracks" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Congress Themes ({rich.tracks.length})</a>
             <a href="#speakers" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Keynote Faculty</a>
             <a href="#pricing" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Delegate Passes</a>
             <a href="#venue" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Venue &amp; Travel</a>
@@ -677,7 +705,7 @@ export default function ConferenceDetailsPage({
                   className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-4 text-sm font-bold text-white hover:bg-white/15 hover:border-amber-400 transition"
                 >
                   <Layers size={17} className="text-amber-400" />
-                  <span>Explore {rich.tracks.length} Scientific Tracks</span>
+                  <span>Explore {rich.tracks.length} Congress Themes</span>
                 </a>
               </div>
             </div>
@@ -732,7 +760,7 @@ export default function ConferenceDetailsPage({
                 <div className="mt-4 grid grid-cols-3 divide-x divide-white/10 rounded-2xl bg-slate-950/60 p-3.5 text-center border border-white/5">
                   <div>
                     <div className="font-display text-lg font-black text-amber-400">{rich.tracks.length}</div>
-                    <div className="text-[10px] uppercase font-bold text-slate-400">Tracks</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400">Themes</div>
                   </div>
                   <div>
                     <div className="font-display text-lg font-black text-white">2 Days</div>
@@ -763,7 +791,7 @@ export default function ConferenceDetailsPage({
         <div className="container-x grid grid-cols-2 gap-8 md:grid-cols-4 text-center">
           <div>
             <div className="font-display text-4xl font-black text-amber-400 drop-shadow">{rich.tracks.length}+</div>
-            <div className="mt-1 text-xs uppercase tracking-wider text-slate-300 font-bold">Scientific Tracks &amp; Sessions</div>
+            <div className="mt-1 text-xs uppercase tracking-wider text-slate-300 font-bold">Congress Themes &amp; Focus Areas</div>
           </div>
           <div>
             <div className="font-display text-4xl font-black text-white drop-shadow">500+</div>
@@ -879,87 +907,204 @@ export default function ConferenceDetailsPage({
               )}
             </section>
 
-            {/* 2. OFFICIAL SCIENTIFIC TRACKS EXPLORER */}
-            <section id="tracks" className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 sm:p-12 shadow-2xl backdrop-blur-xl">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            {/* 2. OFFICIAL CONGRESS THEMES EXPLORER */}
+            <section id="tracks" className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 sm:p-10 lg:p-12 shadow-2xl backdrop-blur-xl">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-white/10">
                 <div>
-                  <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-400">
-                    <Layers size={16} /> Academic Agenda Streams
+                  <div className="inline-flex items-center gap-2 rounded-full bg-amber-400/10 border border-amber-400/20 px-3.5 py-1 text-xs font-extrabold uppercase tracking-wider text-amber-400 mb-2.5">
+                    <Sparkles size={14} className="text-amber-400" /> Academic Agenda &amp; Research Themes
                   </div>
-                  <h2 className="mt-1 font-display text-3xl font-extrabold text-white sm:text-4xl">
-                    Official Scientific Tracks ({rich.tracks.length})
+                  <h2 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
+                    Official Congress Themes ({rich.tracks.length})
                   </h2>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Explore individual session agenda streams and paper presentation categories.
+                  <p className="mt-1.5 text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                    Explore all comprehensive scientific themes and multidisciplinary focus areas curated for keynote lectures, symposia, and research presentations.
                   </p>
                 </div>
 
-                {/* Instant Reactive Search */}
-                <div className="relative w-full sm:w-72">
-                  <Search size={15} className="absolute left-3.5 top-3 text-slate-400" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search session tracks..."
-                    className="w-full rounded-full border border-white/15 bg-slate-950/90 py-2.5 pl-10 pr-4 text-xs text-white placeholder-slate-400 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 shadow-inner"
-                  />
+                {/* View Mode Switcher & Search Bar */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  {/* Switcher */}
+                  <div className="flex items-center rounded-full bg-slate-950/90 p-1 border border-white/10 self-start sm:self-auto shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                        viewMode === 'grid'
+                          ? 'bg-amber-400 text-navy-950 shadow-[0_0_12px_rgba(245,158,11,0.4)]'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                      title="Card Grid View"
+                    >
+                      <LayoutGrid size={14} />
+                      <span>Card View</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('cloud')}
+                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                        viewMode === 'cloud'
+                          ? 'bg-amber-400 text-navy-950 shadow-[0_0_12px_rgba(245,158,11,0.4)]'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                      title="Theme Matrix View"
+                    >
+                      <Tag size={14} />
+                      <span>Theme Matrix</span>
+                    </button>
+                  </div>
+
+                  {/* Reactive Search */}
+                  <div className="relative w-full sm:w-64">
+                    <Search size={14} className="absolute left-3.5 top-3 text-slate-400" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search themes or topics..."
+                      className="w-full rounded-full border border-white/15 bg-slate-950/90 py-2.5 pl-9 pr-4 text-xs text-white placeholder-slate-400 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 shadow-inner"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Category Filter Chips */}
-              <div className="mt-8 flex flex-wrap gap-2 pb-6 border-b border-white/10">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                      activeCategory === cat
-                        ? 'bg-amber-400 text-navy-950 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                        : 'bg-slate-950/80 text-slate-300 hover:text-white border border-white/10'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              {/* Category Filter Chips with Theme Counts */}
+              <div className="mt-6 flex flex-wrap items-center gap-2 pb-6 border-b border-white/10">
+                {categories.map((cat) => {
+                  const count = cat === 'All' ? rich.tracks.length : (categoryCounts[cat] || 0)
+                  const isActive = activeCategory === cat
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setActiveCategory(cat)}
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                        isActive
+                          ? 'bg-amber-400 text-navy-950 shadow-[0_0_15px_rgba(245,158,11,0.3)] font-bold'
+                          : 'bg-slate-950/80 text-slate-300 hover:text-white hover:bg-white/5 border border-white/10'
+                      }`}
+                    >
+                      <span>{cat}</span>
+                      <span
+                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
+                          isActive ? 'bg-navy-950/20 text-navy-950 font-black' : 'bg-white/10 text-slate-400'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
 
-              {/* Grid of Interactive Tracks */}
-              <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                {filteredTracks.map((track) => (
-                  <motion.div
-                    key={track.id}
-                    whileHover={{ scale: 1.015 }}
-                    className="group rounded-2xl border border-white/10 bg-slate-950/80 p-5 transition-all duration-300 hover:border-amber-400/50 hover:bg-slate-950 shadow-md flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="font-mono text-xs font-black text-amber-400/90 bg-amber-400/10 px-2.5 py-1 rounded-md">
-                          TRACK #{track.id.toString().padStart(2, '0')}
+              {/* ── MODE 1: MODERN THEME CARDS (GRID VIEW) ── */}
+              {viewMode === 'grid' && (
+                <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                  {filteredTracks.map((track) => (
+                    <motion.div
+                      key={track.id}
+                      whileHover={{ y: -3 }}
+                      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-slate-950/90 to-slate-900/80 p-5 sm:p-6 transition-all duration-300 hover:border-amber-400/50 hover:shadow-[0_10px_30px_rgba(245,158,11,0.12)] flex flex-col justify-between"
+                    >
+                      {/* Subtle hover gradient glow */}
+                      <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-amber-400/0 blur-2xl transition duration-500 group-hover:bg-amber-400/10 pointer-events-none" />
+
+                      <div>
+                        {/* Top bar: Glowing pulse indicator + Category chip - NO TRACK NUMBERS */}
+                        <div className="flex items-center justify-between mb-3.5 gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+                            </span>
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300/90 font-mono">
+                              Congress Theme
+                            </span>
+                          </div>
+                          <span className="rounded-full bg-white/5 px-3 py-1 text-[10px] font-semibold text-slate-300 border border-white/10 group-hover:border-amber-400/30 group-hover:text-amber-200 transition">
+                            {track.category}
+                          </span>
+                        </div>
+
+                        {/* Theme Title */}
+                        <h4 className="font-display text-base font-bold text-white group-hover:text-amber-300 transition leading-snug">
+                          {track.title}
+                        </h4>
+
+                        {/* Session Focus / Academic Description */}
+                        <p className="mt-2 text-xs text-slate-300/80 leading-relaxed group-hover:text-slate-200 transition">
+                          {track.sessionFocus}
+                        </p>
+                      </div>
+
+                      {/* Footer: Abstract / presentation info */}
+                      <div className="mt-5 pt-3.5 border-t border-white/5 flex items-center justify-between text-[11px] font-semibold text-slate-400 group-hover:text-amber-400 transition">
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                          Oral &amp; Poster Stream
                         </span>
-                        <span className="rounded-full bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold text-slate-300 border border-white/10">
-                          {track.category}
+                        <span className="inline-flex items-center gap-1 text-xs">
+                          <span>Call for Abstracts</span>
+                          <ChevronRight size={13} className="transition-transform group-hover:translate-x-1" />
                         </span>
                       </div>
-                      <h4 className="font-display text-sm font-bold text-white group-hover:text-amber-300 transition leading-snug">
-                        {track.title}
-                      </h4>
-                      <p className="mt-2 text-xs text-slate-400 leading-relaxed">
-                        {track.sessionFocus}
-                      </p>
-                    </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
 
-                    <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[11px] font-semibold text-slate-400 group-hover:text-amber-400 transition">
-                      <span>Oral &amp; Poster Submissions</span>
-                      <ChevronRight size={13} className="transition-transform group-hover:translate-x-1" />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              {/* ── MODE 2: INTERACTIVE THEME MATRIX (CATEGORIZED CLOUD) ── */}
+              {viewMode === 'cloud' && (
+                <div className="mt-8 space-y-6">
+                  {categories.filter((c) => c !== 'All').map((cat) => {
+                    const catTracks = filteredTracks.filter((t) => t.category === cat)
+                    if (catTracks.length === 0) return null
+                    return (
+                      <div
+                        key={cat}
+                        className="rounded-2xl border border-white/10 bg-slate-950/70 p-5 sm:p-6 backdrop-blur-md shadow-lg"
+                      >
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                          <div className="flex items-center gap-2.5">
+                            <span className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
+                            <h3 className="font-display text-sm font-bold uppercase tracking-wider text-white">
+                              {cat} Stream
+                            </h3>
+                          </div>
+                          <span className="text-[11px] font-mono text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2.5 py-0.5 rounded-full">
+                            {catTracks.length} {catTracks.length === 1 ? 'Theme' : 'Themes'}
+                          </span>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {catTracks.map((t) => (
+                            <div
+                              key={t.id}
+                              className="group rounded-xl border border-white/5 bg-slate-900/60 p-4 hover:border-amber-400/40 hover:bg-slate-900/90 transition duration-300 flex flex-col justify-between"
+                            >
+                              <div>
+                                <h5 className="font-display text-xs font-bold text-white group-hover:text-amber-300 transition leading-snug">
+                                  {t.title}
+                                </h5>
+                                <p className="mt-1.5 text-[11px] text-slate-400 line-clamp-2 leading-relaxed group-hover:text-slate-300 transition">
+                                  {t.sessionFocus}
+                                </p>
+                              </div>
+                              <div className="mt-3 flex items-center justify-between text-[10px] text-slate-400 group-hover:text-amber-400 pt-2 border-t border-white/5 font-semibold">
+                                <span>Oral &amp; Poster Accepted</span>
+                                <ChevronRight size={12} className="transition-transform group-hover:translate-x-1" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
 
               {filteredTracks.length === 0 && (
                 <div className="mt-10 rounded-2xl bg-slate-950/60 p-8 text-center text-xs text-slate-400 border border-white/5">
-                  No scientific tracks match "{searchTerm}". Try clearing your filter.
+                  No congress themes match "{searchTerm}". Try clearing your filter or search keyword.
                 </div>
               )}
             </section>
