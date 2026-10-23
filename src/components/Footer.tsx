@@ -63,12 +63,15 @@ export default function Footer() {
       </div>
       <div className="container-x mt-12 flex flex-col justify-between gap-3 border-t border-white/10 py-6 text-xs sm:flex-row">
         <p>© {new Date().getFullYear()} ORIGIN Conferences. All rights reserved.</p>
-        <p className="flex gap-5">
+        <p className="flex items-center gap-5">
           <a href={site.legal.privacy} className="hover:text-gold">
             Privacy Policy
           </a>
           <a href={site.legal.terms} className="hover:text-gold">
             Terms &amp; Conditions
+          </a>
+          <a href="#admin" className="text-white/40 hover:text-amber-400 transition">
+            Admin CMS
           </a>
         </p>
       </div>
