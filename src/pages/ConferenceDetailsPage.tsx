@@ -566,7 +566,7 @@ export default function ConferenceDetailsPage({
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-400 selection:text-navy-950 font-sans">
       {/* ── Top Header Bar ── */}
-      <header className="sticky top-0 z-50 flex h-[72px] items-center justify-between border-b border-white/10 bg-navy-950/90 px-6 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 flex h-[84px] md:h-[92px] items-center justify-between border-b border-white/10 bg-navy-950/90 px-6 backdrop-blur-xl">
         <button
           onClick={handleBack}
           className="group flex items-center gap-2 text-xs sm:text-sm font-semibold text-white/80 transition hover:text-amber-300"
@@ -582,7 +582,7 @@ export default function ConferenceDetailsPage({
           <img
             src="/origin-logo.png"
             alt="ORIGIN Global Conferences"
-            className="h-9 sm:h-11 w-auto object-contain transition-transform group-hover:scale-105"
+            className="h-12 sm:h-16 md:h-18 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-md"
           />
         </button>
 
@@ -604,7 +604,7 @@ export default function ConferenceDetailsPage({
       </header>
 
       {/* ── Secondary Sticky Sub-Navbar ── */}
-      <nav aria-label="Conference sub-navigation" className="sticky top-[72px] z-40 hidden md:block bg-navy-950/80 backdrop-blur-md border-b border-white/5 py-2.5">
+      <nav aria-label="Conference sub-navigation" className="sticky top-[84px] md:top-[92px] z-40 hidden md:block bg-navy-950/80 backdrop-blur-md border-b border-white/5 py-2.5">
         <div className="container-x flex items-center justify-between">
           <div className="flex items-center gap-1 text-xs font-semibold text-slate-300">
             <a href="#overview" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Overview</a>

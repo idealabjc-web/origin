@@ -52,7 +52,7 @@ export default function ServicesPage({ onNavigate }: { onNavigate: (path: string
   ]
 
   return (
-    <div className="min-h-screen bg-slate-50 text-charcoal pt-[72px]">
+    <div className="min-h-screen bg-slate-50 text-charcoal pt-[84px] md:pt-[92px]">
       {/* Hero Header */}
       <section className="relative overflow-hidden bg-navy-950 py-20 text-white lg:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-navy-950/80 to-navy-950" />

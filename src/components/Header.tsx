@@ -40,7 +40,7 @@ export default function Header({
           : 'bg-navy-950/90 shadow-md backdrop-blur-md'
       }`}
     >
-      <div className="container-x flex h-[72px] items-center justify-between">
+      <div className="container-x flex h-[84px] md:h-[92px] items-center justify-between">
         <a
           href="/"
           onClick={(e) => handleNav('/', e)}
@@ -49,7 +49,7 @@ export default function Header({
           <img
             src="/origin-logo.png"
             alt="ORIGIN Global Conferences"
-            className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+            className="h-14 sm:h-16 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-md"
           />
         </a>
 

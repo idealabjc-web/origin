@@ -5,11 +5,11 @@ export default function Footer() {
     <footer className="bg-navy-950 pt-16 text-sm text-white/70">
       <div className="container-x grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <a href="/" className="inline-block group mb-3">
+          <a href="/" className="inline-block group mb-4">
             <img
               src="/origin-logo.png"
               alt="ORIGIN Global Conferences"
-              className="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105"
+              className="h-16 sm:h-20 md:h-24 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-md"
             />
           </a>
           <p className="mt-2 text-xs leading-relaxed text-slate-300">
