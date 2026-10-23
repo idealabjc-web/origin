@@ -1,8 +1,43 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
-body { @apply bg-white font-sans text-charcoal antialiased; overflow-x: hidden; }
+html { 
+  background-color: #060d20;
+  scroll-behavior: smooth; 
+  scroll-padding-top: 4.5rem; 
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+body { 
+  @apply bg-navy-950 font-sans text-charcoal antialiased; 
+  background-color: #060d20;
+  overflow-x: hidden; 
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Hide scrollbars / make completely transparent while keeping scroll functional */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
 :focus-visible { outline: 2px solid #c9a24b; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 @layer components {

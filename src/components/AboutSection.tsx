@@ -7,11 +7,11 @@ const highlights = [
 ]
 export default function AboutSection() {
   return (
-    <section id="about" className="py-24 lg:py-32">
+    <section id="about" className="py-24 lg:py-32 bg-white">
       <div className="container-x grid items-center gap-14 lg:grid-cols-2">
         <Reveal className="relative">
           <img loading="lazy" src="https://images.unsplash.com/photo-1544531585-9847b68c8c86?auto=format&fit=crop&w=1000&q=70" alt="Speaker presenting to a conference audience" className="aspect-[4/5] w-full rounded-2xl object-cover shadow-2xl" />
-<img loading="lazy" src="https://images.unsplash.com/photo-1515161665709-19b0f4c1d2c5?auto=format&fit=crop&w=1000&q=70" alt="Conference hall with audience" className="mt-4 w-full rounded-2xl object-cover shadow-2xl" />
+          <img loading="lazy" src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1000&q=70" alt="Conference hall with audience" className="mt-4 w-full rounded-2xl object-cover shadow-2xl" />
           <img loading="lazy" src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=600&q=70" alt="Delegates networking" className="absolute -bottom-8 -right-2 hidden w-1/2 rounded-2xl border-8 border-white object-cover shadow-xl sm:block md:-right-8" />
           <div className="absolute left-4 top-4 rounded-xl bg-navy-900/90 px-5 py-4 text-white backdrop-blur sm:-left-6 sm:top-10">
             <p className="font-display text-3xl text-gold">00+</p><p className="text-xs text-white/70">Placeholder statistic</p>

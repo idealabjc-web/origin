@@ -193,7 +193,7 @@ export default function App() {
 
           {/* 4. Full Homepage (Default View) */}
           {route.type === 'home' && (
-            <main className="pt-[84px] md:pt-[92px]">
+            <main className="pt-[84px] md:pt-[92px] bg-navy-950">
               <HeroVideoSlider />
               <StatisticsStrip />
               <AboutSection />

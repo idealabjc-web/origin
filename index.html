@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var r of regs) { r.unregister(); }
+        });
+      }
+    </script>
     <link rel="icon" type="image/png" href="/origin-logo.png" />
     <title>ORIGIN Conferences | Global Conferences & Event Services</title>
     <meta name="description" content="ORIGIN Conferences brings professionals together through conferences, speaker engagement, knowledge exchange and networking." />
@@ -15,7 +22,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
   </head>
-  <body>
+  <body class="bg-navy-950" style="background-color: #060d20;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

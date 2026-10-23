@@ -2,7 +2,7 @@ import { services } from '../data/content'
 import Reveal from './Reveal'
 export default function ServicesGrid() {
   return (
-    <section id="why-us" className="py-24 lg:py-32">
+    <section id="why-us" className="py-24 lg:py-32 bg-white">
       <div className="container-x">
         <Reveal className="max-w-2xl"><p className="eyebrow">Why Choose ORIGIN Conferences?</p><h2 className="h2">Every part of a conference, handled with care</h2></Reveal>
         <div className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-charcoal/10 bg-charcoal/10 sm:grid-cols-2 lg:grid-cols-3">

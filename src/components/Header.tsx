@@ -47,6 +47,7 @@ export default function Header({
           className="flex items-center gap-2 cursor-pointer group py-1"
         >
           <img
+            id="header-origin-logo"
             src="/origin-logo.png"
             alt="ORIGIN Global Conferences"
             className="h-14 sm:h-16 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-md"

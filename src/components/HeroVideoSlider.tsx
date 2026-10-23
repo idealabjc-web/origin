@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Globe2, Film } from 'lucide-react'
-import PrismCometPreloader from '@/components/ui/prism-comet-preloader'
+import OriginAnimatedLogoIntro from '@/components/ui/OriginAnimatedLogoIntro'
 import OrbitDeliveryHero from '@/components/ui/orbit-delivery-hero'
 
 /* ── Conference stock videos (royalty-free from Pexels) ──────────── */
@@ -34,6 +34,11 @@ const SESSION_PRELOADED_KEY = 'origin_has_preloaded_intro'
 function checkHasPreloaded(): boolean {
   if (typeof window === 'undefined') return false
   try {
+    const navEntries = performance.getEntriesByType('navigation')
+    if (navEntries.length > 0 && (navEntries[0] as PerformanceNavigationTiming).type === 'reload') {
+      sessionStorage.removeItem(SESSION_PRELOADED_KEY)
+      return false
+    }
     return sessionStorage.getItem(SESSION_PRELOADED_KEY) === 'true'
   } catch {
     return false
@@ -42,6 +47,7 @@ function checkHasPreloaded(): boolean {
 
 export default function HeroVideoSlider() {
   const [animDone, setAnimDone] = useState<boolean>(() => checkHasPreloaded())
+  const [heroReady, setHeroReady] = useState<boolean>(() => checkHasPreloaded())
   const [heroMode, setHeroMode] = useState<'orbit' | 'video'>('orbit')
   const [current, setCurrent] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -66,50 +72,35 @@ export default function HeroVideoSlider() {
     resetTimer()
   }
 
-  /* ── While the preloader is running, show it full section ────────── */
-  if (!animDone) {
-    return (
-      <section
-        id="home"
-        className="relative w-full h-[calc(100vh-72px)] min-h-[560px] overflow-hidden bg-navy-950"
-      >
-        <PrismCometPreloader
-          loop={false}
-          durationMs={4000}
-          word="ORIGIN"
-          caption="Conferences"
-          palette={{
-            background: '#060d20',
-            blue: '#2c55ff',
-            violet: '#8a3dff',
-            magenta: '#ff3fc8',
-            cyan: '#86e6ff',
-            gold: '#c9a24b',
+  /* ── Interactive Hero Section: 3D Orbit Tour or Video Showcase ── */
+  return (
+    <>
+      {!animDone && (
+        <OriginAnimatedLogoIntro
+          durationMs={5400}
+          onFlightStart={() => {
+            // Mount hero section as soon as flight begins so it crossfades smoothly
+            setHeroReady(true)
           }}
-          speed={1.6}
-          intensity={1.2}
-          height="calc(100vh - 72px)"
           onComplete={() => {
             try {
               sessionStorage.setItem(SESSION_PRELOADED_KEY, 'true')
             } catch {}
             setAnimDone(true)
+            setHeroReady(true)
+            window.scrollTo({ top: 0, behavior: 'instant' })
           }}
         />
-      </section>
-    )
-  }
+      )}
 
-  /* ── Interactive Hero Section: 3D Orbit Tour or Video Showcase ── */
-  return (
-    <section
-      id="home"
-      className={`relative w-full overflow-hidden ${
-        heroMode === 'orbit'
-          ? 'h-[calc(100vh-72px)] min-h-[760px]'
-          : 'h-[calc(100vh-72px)] min-h-[560px] bg-navy-950'
-      }`}
-    >
+      <section
+        id="home"
+        className={`relative w-full overflow-hidden bg-[#0d1526] ${
+          heroMode === 'orbit'
+            ? 'h-[calc(100vh-84px)] md:h-[calc(100vh-92px)] min-h-[720px]'
+            : 'h-[calc(100vh-84px)] md:h-[calc(100vh-92px)] min-h-[560px] bg-navy-950'
+        }`}
+      >
       {/* Mode Switcher floating toggle */}
       <div className="absolute top-4 right-4 z-30 pointer-events-auto">
         <div className="inline-flex items-center gap-1 p-1 rounded-full bg-navy-900/90 border border-white/15 backdrop-blur-md shadow-xl text-xs">
@@ -135,7 +126,7 @@ export default function HeroVideoSlider() {
       </div>
 
       {heroMode === 'orbit' ? (
-        <OrbitDeliveryHero theme="dark" />
+        (animDone || heroReady) ? <OrbitDeliveryHero theme="dark" /> : null
       ) : (
         <>
           {/* ── Video layers ─────────────────────────────────────────── */}
@@ -242,5 +233,6 @@ export default function HeroVideoSlider() {
         </>
       )}
     </section>
-  )
+  </>
+)
 }
