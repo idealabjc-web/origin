@@ -43,16 +43,16 @@ export default function FeaturedConferences({
           </p>
         </Reveal>
 
-        <div role="tablist" aria-label="Filter by category" className="mt-10 flex flex-wrap gap-2">
+        <div role="tablist" aria-label="Filter by category" className="mt-8 sm:mt-10 flex items-center gap-2 overflow-x-auto no-scrollbar sm:flex-wrap pb-2 sm:pb-0">
           {(['All', ...categories] as const).map((c) => (
             <button
               key={c}
               role="tab"
               aria-selected={cat === c}
               onClick={() => setCat(c)}
-              className={`min-h-[44px] rounded-full border px-5 text-sm font-medium transition ${
+              className={`min-h-[42px] sm:min-h-[44px] flex-shrink-0 rounded-full border px-4 sm:px-5 text-xs sm:text-sm font-medium transition ${
                 cat === c
-                  ? 'border-navy-900 bg-navy-900 text-white'
+                  ? 'border-navy-900 bg-navy-900 text-white shadow-md'
                   : 'border-charcoal/20 hover:border-gold'
               }`}
             >

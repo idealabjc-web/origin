@@ -33,9 +33,9 @@ export default function ConferencesPage({
     )
 
   return (
-    <div className="min-h-screen bg-slate-50 text-charcoal pt-[84px] md:pt-[92px]">
+    <div className="min-h-screen bg-slate-50 text-charcoal pt-[72px] sm:pt-[84px] md:pt-[92px]">
       {/* Hero Header */}
-      <section className="relative overflow-hidden bg-navy-950 py-20 text-white lg:py-28">
+      <section className="relative overflow-hidden bg-navy-950 py-14 sm:py-20 text-white lg:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-navy-950/80 to-navy-950" />
         <div className="container-x relative">
           <motion.div
@@ -46,16 +46,16 @@ export default function ConferencesPage({
             <span className="inline-block rounded-full bg-gold px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-navy-950">
               Official 2027 Calendar
             </span>
-            <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
               Premier Global Conferences
             </h1>
-            <p className="mt-4 text-lg text-white/80 leading-relaxed">
+            <p className="mt-3 sm:mt-4 text-base sm:text-lg text-white/80 leading-relaxed">
               Explore our internationally accredited congresses spanning Healthcare, Dental Sciences, and Executive Entrepreneurship.
             </p>
           </motion.div>
 
           {/* Search bar inside hero */}
-          <div className="mt-10 max-w-xl">
+          <div className="mt-8 sm:mt-10 max-w-xl">
             <div className="relative flex items-center">
               <Search className="absolute left-4 text-white/50" size={18} />
               <input
@@ -63,7 +63,7 @@ export default function ConferencesPage({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by conference name, medical specialty, or venue..."
-                className="w-full rounded-2xl border border-white/20 bg-white/10 py-3.5 pl-12 pr-4 text-sm text-white placeholder-white/50 backdrop-blur-md outline-none focus:border-gold focus:ring-1 focus:ring-gold"
+                className="w-full rounded-2xl border border-white/20 bg-white/10 py-3 sm:py-3.5 pl-11 sm:pl-12 pr-4 text-sm text-white placeholder-white/50 backdrop-blur-md outline-none focus:border-gold focus:ring-1 focus:ring-gold"
               />
             </div>
           </div>
@@ -71,17 +71,17 @@ export default function ConferencesPage({
       </section>
 
       {/* Main Listing Section */}
-      <section className="py-16 lg:py-24">
+      <section className="py-12 sm:py-16 lg:py-24">
         <div className="container-x">
           {/* Category Tabs */}
-          <div role="tablist" aria-label="Filter by category" className="flex flex-wrap gap-2 pb-8 border-b border-slate-200">
+          <div role="tablist" aria-label="Filter by category" className="flex items-center gap-2 overflow-x-auto no-scrollbar sm:flex-wrap pb-4 sm:pb-8 border-b border-slate-200">
             {(['All', ...categories] as const).map((c) => (
               <button
                 key={c}
                 role="tab"
                 aria-selected={cat === c}
                 onClick={() => setCat(c)}
-                className={`min-h-[44px] rounded-full border px-5 text-sm font-semibold transition ${
+                className={`min-h-[42px] sm:min-h-[44px] flex-shrink-0 rounded-full border px-4 sm:px-5 text-xs sm:text-sm font-semibold transition ${
                   cat === c
                     ? 'border-navy-950 bg-navy-950 text-white shadow-md'
                     : 'border-slate-200 bg-white text-charcoal/80 hover:border-gold hover:text-navy-950'

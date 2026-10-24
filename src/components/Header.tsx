@@ -40,7 +40,7 @@ export default function Header({
           : 'bg-navy-950/90 shadow-md backdrop-blur-md'
       }`}
     >
-      <div className="container-x flex h-[84px] md:h-[92px] items-center justify-between">
+      <div className="container-x flex h-[72px] sm:h-[84px] md:h-[92px] items-center justify-between">
         <a
           href="/"
           onClick={(e) => handleNav('/', e)}
@@ -50,7 +50,7 @@ export default function Header({
             id="header-origin-logo"
             src="/origin-logo.png"
             alt="ORIGIN Global Conferences"
-            className="h-14 sm:h-16 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-md"
+            className="h-11 sm:h-14 md:h-18 lg:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-md"
           />
         </a>
 
@@ -86,12 +86,12 @@ export default function Header({
         </a>
 
         <button
-          className="p-2 text-white lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-xl p-2 text-white hover:bg-white/10 active:bg-white/20 transition lg:hidden"
           aria-label="Toggle menu"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
-          {open ? <X /> : <Menu />}
+          {open ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
@@ -102,25 +102,26 @@ export default function Header({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden bg-navy-950 border-b border-white/10 lg:hidden"
+            className="max-h-[calc(100vh-72px)] sm:max-h-[calc(100vh-84px)] overflow-y-auto bg-navy-950/98 backdrop-blur-2xl border-b border-white/10 lg:hidden shadow-2xl"
           >
-            <div className="container-x flex flex-col gap-1 pb-6 pt-2">
+            <div className="container-x flex flex-col gap-1 pb-8 pt-3">
               {navItems.map((n) => (
                 <a
                   key={n.href}
                   href={n.href}
                   onClick={(e) => handleNav(n.href, e)}
-                  className={`border-b border-white/10 py-3 text-sm font-semibold transition ${
+                  className={`flex items-center justify-between border-b border-white/10 py-3.5 text-base font-semibold transition active:text-gold ${
                     activeRoute === n.href ? 'text-gold' : 'text-white'
                   }`}
                 >
-                  {n.label}
+                  <span>{n.label}</span>
+                  <span className="text-xs text-white/30">→</span>
                 </a>
               ))}
               <a
                 href="/conferences"
                 onClick={(e) => handleNav('/conferences', e)}
-                className="btn btn-gold mt-4 text-xs font-bold text-center"
+                className="btn btn-gold mt-5 text-sm font-bold text-center py-3.5 shadow-lg shadow-gold/20"
               >
                 Explore Conferences
               </a>

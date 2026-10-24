@@ -566,13 +566,14 @@ export default function ConferenceDetailsPage({
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-amber-400 selection:text-navy-950 font-sans">
       {/* ── Top Header Bar ── */}
-      <header className="sticky top-0 z-50 flex h-[84px] md:h-[92px] items-center justify-between border-b border-white/10 bg-navy-950/90 px-6 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 flex h-[72px] sm:h-[84px] md:h-[92px] items-center justify-between border-b border-white/10 bg-navy-950/90 px-4 sm:px-6 backdrop-blur-xl">
         <button
           onClick={handleBack}
-          className="group flex items-center gap-2 text-xs sm:text-sm font-semibold text-white/80 transition hover:text-amber-300"
+          className="group flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-semibold text-white/80 transition hover:text-amber-300"
         >
           <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1 text-amber-400" />
-          <span>Back to All Conferences</span>
+          <span className="hidden sm:inline">Back to All Conferences</span>
+          <span className="sm:hidden">Conferences</span>
         </button>
 
         <button
@@ -582,11 +583,11 @@ export default function ConferenceDetailsPage({
           <img
             src="/origin-logo.png"
             alt="ORIGIN Global Conferences"
-            className="h-12 sm:h-16 md:h-18 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-md"
+            className="h-11 sm:h-14 md:h-18 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-md"
           />
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={handleShare}
             className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/15 px-3.5 py-1.5 text-xs text-white/80 hover:text-white hover:bg-white/5 transition"
@@ -596,15 +597,16 @@ export default function ConferenceDetailsPage({
           </button>
           <a
             href="#register-section"
-            className="btn btn-gold text-xs py-2 px-5 font-bold shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transition"
+            className="btn btn-gold text-xs py-2 px-3.5 sm:px-5 font-bold shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transition"
           >
-            Register as Delegate
+            <span className="hidden sm:inline">Register as Delegate</span>
+            <span className="sm:hidden">Register</span>
           </a>
         </div>
       </header>
 
       {/* ── Secondary Sticky Sub-Navbar ── */}
-      <nav aria-label="Conference sub-navigation" className="sticky top-[84px] md:top-[92px] z-40 hidden md:block bg-navy-950/80 backdrop-blur-md border-b border-white/5 py-2.5">
+      <nav aria-label="Conference sub-navigation" className="sticky top-[72px] sm:top-[84px] md:top-[92px] z-40 hidden md:block bg-navy-950/80 backdrop-blur-md border-b border-white/5 py-2.5">
         <div className="container-x flex items-center justify-between">
           <div className="flex items-center gap-1 text-xs font-semibold text-slate-300">
             <a href="#overview" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Overview</a>
@@ -816,9 +818,9 @@ export default function ConferenceDetailsPage({
       <div className="container-x py-20 lg:py-28">
         <div className="grid gap-12 lg:grid-cols-12">
           {/* Main Column (8 cols) */}
-          <main className="space-y-20 lg:col-span-8">
+          <main className="space-y-14 sm:space-y-20 lg:col-span-8">
             {/* 1. OVERVIEW & CONGRESS VISION */}
-            <section id="overview" className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 sm:p-12 shadow-2xl backdrop-blur-xl">
+            <section id="overview" className="rounded-3xl border border-white/10 bg-slate-900/70 p-5 sm:p-8 lg:p-12 shadow-2xl backdrop-blur-xl">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-amber-400">
                   <Sparkles size={16} /> Official Congress Overview &amp; Mandate
@@ -973,7 +975,7 @@ export default function ConferenceDetailsPage({
               </div>
 
               {/* Category Filter Chips with Theme Counts */}
-              <div className="mt-6 flex flex-wrap items-center gap-2 pb-6 border-b border-white/10">
+              <div className="mt-6 flex items-center gap-2 overflow-x-auto no-scrollbar sm:flex-wrap pb-4 sm:pb-6 border-b border-white/10">
                 {categories.map((cat) => {
                   const count = cat === 'All' ? rich.tracks.length : (categoryCounts[cat] || 0)
                   const isActive = activeCategory === cat
@@ -982,7 +984,7 @@ export default function ConferenceDetailsPage({
                       key={cat}
                       type="button"
                       onClick={() => setActiveCategory(cat)}
-                      className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                      className={`inline-flex flex-shrink-0 items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold transition ${
                         isActive
                           ? 'bg-amber-400 text-navy-950 shadow-[0_0_15px_rgba(245,158,11,0.3)] font-bold'
                           : 'bg-slate-950/80 text-slate-300 hover:text-white hover:bg-white/5 border border-white/10'
@@ -1286,7 +1288,7 @@ export default function ConferenceDetailsPage({
           {/* Sticky Sidebar (4 cols) */}
           <aside className="space-y-8 lg:col-span-4">
             {/* Registration Card (Direct to Supabase) */}
-            <div id="register-section" className="rounded-3xl bg-gradient-to-b from-navy-950 to-slate-950 p-8 text-white shadow-2xl sticky top-28 border border-amber-400/40 backdrop-blur-2xl">
+            <div id="register-section" className="rounded-3xl bg-gradient-to-b from-navy-950 to-slate-950 p-5 sm:p-8 text-white shadow-2xl static lg:sticky lg:top-28 border border-amber-400/40 backdrop-blur-2xl">
               <span className="rounded-full bg-amber-400/20 px-3.5 py-1 text-[11px] font-bold text-amber-300 uppercase tracking-wider border border-amber-400/30">
                 Official Delegate Portal
               </span>

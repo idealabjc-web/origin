@@ -97,30 +97,32 @@ export default function HeroVideoSlider() {
         id="home"
         className={`relative w-full overflow-hidden bg-[#0d1526] ${
           heroMode === 'orbit'
-            ? 'h-[calc(100vh-84px)] md:h-[calc(100vh-92px)] min-h-[720px]'
-            : 'h-[calc(100vh-84px)] md:h-[calc(100vh-92px)] min-h-[560px] bg-navy-950'
+            ? 'h-auto min-h-[calc(100vh-72px)] sm:min-h-[calc(100vh-84px)] md:h-[calc(100vh-92px)] md:min-h-[720px]'
+            : 'min-h-[calc(100vh-72px)] sm:min-h-[calc(100vh-84px)] md:h-[calc(100vh-92px)] md:min-h-[560px] bg-navy-950'
         }`}
       >
       {/* Mode Switcher floating toggle */}
-      <div className="absolute top-4 right-4 z-30 pointer-events-auto">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 pointer-events-auto">
         <div className="inline-flex items-center gap-1 p-1 rounded-full bg-navy-900/90 border border-white/15 backdrop-blur-md shadow-xl text-xs">
           <button
             onClick={() => setHeroMode('orbit')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full font-medium transition ${
               heroMode === 'orbit' ? 'bg-gold text-navy-950 shadow' : 'text-white/70 hover:text-white'
             }`}
           >
             <Globe2 className="h-3.5 w-3.5" />
-            <span>3D Global Tour</span>
+            <span className="hidden sm:inline">3D Global Tour</span>
+            <span className="sm:hidden text-[11px]">3D Tour</span>
           </button>
           <button
             onClick={() => setHeroMode('video')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-medium transition ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full font-medium transition ${
               heroMode === 'video' ? 'bg-gold text-navy-950 shadow' : 'text-white/70 hover:text-white'
             }`}
           >
             <Film className="h-3.5 w-3.5" />
-            <span>Video Highlights</span>
+            <span className="hidden sm:inline">Video Highlights</span>
+            <span className="sm:hidden text-[11px]">Videos</span>
           </button>
         </div>
       </div>
@@ -154,7 +156,7 @@ export default function HeroVideoSlider() {
           <div className="absolute inset-0 bg-gradient-to-b from-navy-950/70 via-navy-950/50 to-navy-950/90 pointer-events-none" />
 
           {/* ── Content ──────────────────────────────────────────────── */}
-          <div className="relative z-10 flex h-full flex-col items-center justify-center text-center px-5">
+          <div className="relative z-10 flex h-full flex-col items-center justify-center text-center px-4 sm:px-5 py-20 sm:py-0">
             <motion.span
               key={`eye-${current}`}
               initial={{ opacity: 0, y: 10 }}
@@ -172,7 +174,7 @@ export default function HeroVideoSlider() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.7, ease: 'easeOut' }}
-                className="font-display text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl max-w-4xl"
+                className="font-display text-3xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl max-w-4xl"
               >
                 {slides[current].heading}
               </motion.h1>

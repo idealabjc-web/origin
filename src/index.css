@@ -41,11 +41,22 @@ body {
 :focus-visible { outline: 2px solid #c9a24b; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 @layer components {
-  .container-x { @apply mx-auto w-full max-w-7xl px-5 sm:px-8; }
+  .container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
   .btn { @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full px-7 text-sm font-semibold transition duration-300; }
   .btn-gold { @apply bg-gold text-navy-950 hover:bg-gold-light hover:shadow-lg hover:shadow-gold/30; }
   .btn-ghost { @apply border border-white/40 text-white backdrop-blur hover:bg-white/10; }
   .btn-dark { @apply bg-navy-900 text-white hover:bg-navy-700; }
   .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.22em] text-gold; }
-  .h2 { @apply mt-3 font-display text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl; }
+  .h2 { @apply mt-3 font-display text-2xl font-semibold leading-tight sm:text-4xl lg:text-5xl; }
 }
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+

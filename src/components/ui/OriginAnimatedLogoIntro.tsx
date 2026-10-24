@@ -53,8 +53,11 @@ export default function OriginAnimatedLogoIntro({
     }
 
     const aspect = endW > 0 && endH > 0 ? endW / endH : 2.0
-    // Calculate initial logo position in center of screen (matching video's logo placement)
-    const startW = Math.min(window.innerWidth * 0.48, 560)
+    // Calculate initial logo position in center of screen (matching video's logo placement across mobile portrait & desktop)
+    const isMobile = window.innerWidth < 640
+    const startW = isMobile
+      ? Math.min(window.innerWidth * 0.78, 320)
+      : Math.min(window.innerWidth * 0.48, 560)
     const startH = startW / aspect
     const startX = (window.innerWidth - startW) / 2
     const startY = (window.innerHeight - startH) * 0.46
@@ -169,7 +172,7 @@ export default function OriginAnimatedLogoIntro({
           <button
             type="button"
             onClick={handleSkip}
-            className="absolute bottom-6 right-6 z-[10000] flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-navy-950/90 px-4 py-2 text-xs font-semibold text-amber-300 backdrop-blur-md transition hover:border-amber-400 hover:bg-amber-400/20 hover:text-white shadow-2xl cursor-pointer pointer-events-auto"
+            className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-[10000] flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-navy-950/90 px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-semibold text-amber-300 backdrop-blur-md transition hover:border-amber-400 hover:bg-amber-400/20 hover:text-white shadow-2xl cursor-pointer pointer-events-auto"
           >
             <span>Skip Intro</span>
             <ChevronRight size={14} />

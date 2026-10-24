@@ -76,9 +76,9 @@ export default function SpeakersPage() {
   )
 
   return (
-    <div className="min-h-screen bg-slate-50 text-charcoal pt-[84px] md:pt-[92px]">
+    <div className="min-h-screen bg-slate-50 text-charcoal pt-[72px] sm:pt-[84px] md:pt-[92px]">
       {/* Hero Header */}
-      <section className="relative overflow-hidden bg-navy-950 py-20 text-white lg:py-28">
+      <section className="relative overflow-hidden bg-navy-950 py-14 sm:py-20 text-white lg:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-navy-950/80 to-navy-950" />
         <div className="container-x relative">
           <motion.div
@@ -89,10 +89,10 @@ export default function SpeakersPage() {
             <span className="inline-flex items-center gap-2 rounded-full bg-gold/20 px-3.5 py-1 text-xs font-bold text-gold uppercase tracking-wider">
               <Mic size={14} /> World-Renowned Faculty
             </span>
-            <h1 className="mt-4 font-display text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
               Distinguished Keynotes &amp; Visionaries
             </h1>
-            <p className="mt-4 text-lg text-white/80 leading-relaxed">
+            <p className="mt-3 sm:mt-4 text-base sm:text-lg text-white/80 leading-relaxed">
               Meet the global pioneers, clinical professors, and industry authorities headlining our 2027 congresses.
             </p>
 
