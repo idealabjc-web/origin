@@ -674,7 +674,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* 1. CONFERENCES TAB */}
             {activeTab === 'conferences' && (
-              <div className="space-y-6 max-w-6xl">
+              <div className="space-y-6 w-full">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display text-2xl font-bold">Conferences</h2>
@@ -737,7 +737,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* 2. UPCOMING EVENTS TAB */}
             {activeTab === 'events' && (
-              <div className="space-y-6 max-w-5xl">
+              <div className="space-y-6 w-full">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display text-2xl font-bold">Upcoming Events</h2>
@@ -788,7 +788,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* 3. SPEAKERS TAB (NEW) */}
             {activeTab === 'speakers' && (
-              <div className="space-y-6 max-w-6xl">
+              <div className="space-y-6 w-full">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display text-2xl font-bold">Keynote & Expert Speakers</h2>
@@ -849,7 +849,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* 4. GALLERY TAB (NEW) */}
             {activeTab === 'gallery' && (
-              <div className="space-y-6 max-w-6xl">
+              <div className="space-y-6 w-full">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display text-2xl font-bold">Conference Photo Gallery</h2>
@@ -902,7 +902,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* 5. TESTIMONIALS TAB */}
             {activeTab === 'testimonials' && (
-              <div className="space-y-6 max-w-6xl">
+              <div className="space-y-6 w-full">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display text-2xl font-bold">Testimonials</h2>
@@ -956,7 +956,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* 6. KEY METRICS TAB */}
             {activeTab === 'stats' && (
-              <div className="space-y-6 max-w-4xl">
+              <div className="space-y-6 w-full">
                 <div>
                   <h2 className="font-display text-2xl font-bold">Key Figures & Statistics</h2>
                   <p className="text-sm text-white/60">Update the impact counters displayed across the site.</p>
@@ -998,7 +998,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* 7. NEWSLETTER SUBSCRIBERS */}
             {activeTab === 'subscribers' && (
-              <div className="space-y-6 max-w-5xl">
+              <div className="space-y-6 w-full">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display text-2xl font-bold">Newsletter Subscribers ({subscribers.length})</h2>
@@ -1041,7 +1041,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* 8. EVENT REGISTRATIONS */}
             {activeTab === 'registrations' && (
-              <div className="space-y-6 max-w-6xl">
+              <div className="space-y-6 w-full">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display text-2xl font-bold">Event Registrations ({registrations.length})</h2>
@@ -1093,7 +1093,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* 9. SPEAKER PROPOSALS */}
             {activeTab === 'inquiries' && (
-              <div className="space-y-6 max-w-5xl">
+              <div className="space-y-6 w-full">
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-display text-2xl font-bold">Speaker Proposals & Inquiries ({inquiries.length})</h2>
