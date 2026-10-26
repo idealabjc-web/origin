@@ -68,46 +68,106 @@ function setLocalItem<T>(key: string, value: T) {
 }
 
 // ==========================================
+// RESILIENT DATA PACKERS / UNPACKERS
+// ==========================================
+// Persists theme, sessions, and images even if individual columns are missing in Supabase
+export function unpackConferenceData(desc: string | undefined | null) {
+  if (!desc) return { description: '', theme: '', sessions: '', images: [] as string[] }
+  const match = desc.match(/<!--ORIGIN_DATA:([\s\S]*?)-->/)
+  if (!match) return { description: desc, theme: '', sessions: '', images: [] as string[] }
+  try {
+    const meta = JSON.parse(match[1])
+    const cleanDesc = desc.replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '').trim()
+    return {
+      description: cleanDesc,
+      theme: typeof meta.theme === 'string' ? meta.theme : '',
+      sessions: typeof meta.sessions === 'string' ? meta.sessions : (Array.isArray(meta.sessions) ? meta.sessions.join(', ') : ''),
+      images: Array.isArray(meta.images) ? (meta.images as string[]) : ([] as string[])
+    }
+  } catch {
+    return { description: desc, theme: '', sessions: '', images: [] as string[] }
+  }
+}
+
+export function packConferenceData(desc: string, meta: { theme?: string; sessions?: string; images?: string[] }): string {
+  const clean = (desc || '').replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '').trim()
+  const payload = {
+    theme: meta.theme || '',
+    sessions: meta.sessions || '',
+    images: Array.isArray(meta.images) ? meta.images : []
+  }
+  if (!payload.theme && !payload.sessions && payload.images.length === 0) {
+    return clean
+  }
+  return `${clean}\n\n<!--ORIGIN_DATA:${JSON.stringify(payload)}-->`
+}
+
+// ==========================================
 // DATA FETCHERS (with automatic fallbacks)
 // ==========================================
 
 export async function getConferences(): Promise<Conference[]> {
-  if (!supabase) return getLocalItem<Conference[]>(LOCAL_CONFS_KEY, defaultConferences)
+  const localConfs = getLocalItem<Conference[]>(LOCAL_CONFS_KEY, defaultConferences)
+  if (!supabase) return localConfs
   try {
     const { data, error } = await supabase
       .from('conferences')
       .select('*')
       .order('display_order', { ascending: true })
 
-    if (error) {
-      console.warn('[Supabase] getConferences error, using local/default:', error.message)
-      return getLocalItem<Conference[]>(LOCAL_CONFS_KEY, defaultConferences)
+    if (error || !data) {
+      console.warn('[Supabase] getConferences error, using local/default:', error?.message)
+      return localConfs
     }
 
-    if (!data) return getLocalItem<Conference[]>(LOCAL_CONFS_KEY, defaultConferences)
+    const list = data.map((item) => {
+      const localMatch = localConfs.find((c) => c.id === item.id)
+      const defaultMatch = defaultConferences.find((c) => c.id === item.id)
+      const { description: cleanDesc, theme: metaTheme, sessions: metaSessions, images: metaImages } = unpackConferenceData(item.description)
 
-    const list = data.map((item) => ({
-      id: item.id,
-      title: item.title,
-      category: item.category,
-      date: item.date,
-      location: item.location,
-      description: item.description,
-      image: item.image,
-      href: item.href || '#',
-      theme: item.theme || '',
-      sessions: item.sessions || '',
-      images: Array.isArray(item.images)
-        ? item.images
-        : (typeof item.images === 'string'
-          ? (() => { try { return JSON.parse(item.images) } catch { return [] } })()
-          : (defaultConferences.find(c => c.id === item.id)?.images || [])),
-    }))
+      // Priority resolution:
+      // 1. Dedicated column from Supabase (if exists & has non-empty value)
+      // 2. Packed metadata in description (persisted in Supabase text column across all devices)
+      // 3. Local storage cached value (from current browser session)
+      // 4. Default conference value
+      const theme = item.theme || metaTheme || localMatch?.theme || defaultMatch?.theme || ''
+      const sessions = item.sessions || metaSessions || localMatch?.sessions || defaultMatch?.sessions || ''
+
+      let images: string[] = []
+      if (Array.isArray(item.images) && item.images.length > 0) {
+        images = item.images
+      } else if (typeof item.images === 'string') {
+        try { images = JSON.parse(item.images) } catch {}
+      }
+      if (images.length === 0 && metaImages && metaImages.length > 0) {
+        images = metaImages
+      }
+      if (images.length === 0 && localMatch?.images && localMatch.images.length > 0) {
+        images = localMatch.images
+      }
+      if (images.length === 0 && defaultMatch?.images) {
+        images = defaultMatch.images
+      }
+
+      return {
+        id: item.id,
+        title: item.title,
+        category: item.category,
+        date: item.date,
+        location: item.location,
+        description: cleanDesc || item.description || '',
+        image: item.image,
+        href: item.href || '#',
+        theme,
+        sessions,
+        images,
+      }
+    })
     setLocalItem(LOCAL_CONFS_KEY, list)
     return list
   } catch (err) {
     console.warn('[Supabase] Falling back to local/default conferences:', err)
-    return getLocalItem<Conference[]>(LOCAL_CONFS_KEY, defaultConferences)
+    return localConfs
   }
 }
 
@@ -250,21 +310,34 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
   // Always update local cache so changes show immediately
   const current = getLocalItem<Conference[]>(LOCAL_CONFS_KEY, defaultConferences)
   const idx = current.findIndex(c => c.id === conf.id)
+  const existingItem = idx >= 0 ? current[idx] : null
+
+  // Ensure theme, sessions, images, and description are safely extracted and merged
+  const theme = conf.theme !== undefined ? conf.theme : (existingItem?.theme || '')
+  const sessions = conf.sessions !== undefined ? conf.sessions : (existingItem?.sessions || '')
+  const images = conf.images !== undefined ? conf.images : (existingItem?.images || [])
+  const cleanDescription = (conf.description !== undefined ? conf.description : (existingItem?.description || ''))
+    .replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '')
+    .trim()
+
+  const packedDescription = packConferenceData(cleanDescription, { theme, sessions, images })
+
   const newItem: Conference = {
     id: conf.id,
-    title: conf.title || 'Untitled Conference',
-    category: (conf.category as any) || 'Healthcare & Life Sciences',
-    date: conf.date || 'Date to be announced',
-    location: conf.location || 'Location to be announced',
-    description: conf.description || '',
-    image: conf.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=70',
-    href: conf.href || '#',
-    theme: conf.theme || '',
-    sessions: conf.sessions || '',
-    images: conf.images || [],
+    title: conf.title || existingItem?.title || 'Untitled Conference',
+    category: (conf.category as any) || existingItem?.category || 'Healthcare & Life Sciences',
+    date: conf.date || existingItem?.date || 'Date to be announced',
+    location: conf.location || existingItem?.location || 'Location to be announced',
+    description: cleanDescription,
+    image: conf.image || existingItem?.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=70',
+    href: conf.href || existingItem?.href || '#',
+    theme,
+    sessions,
+    images,
   }
+
   if (idx >= 0) {
-    current[idx] = { ...current[idx], ...newItem }
+    current[idx] = newItem
   } else {
     current.push(newItem)
   }
@@ -278,29 +351,46 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
   try {
     const payload: Record<string, any> = {
       id: conf.id,
-      title: conf.title,
-      category: conf.category,
-      date: conf.date,
-      location: conf.location,
-      description: conf.description,
-      image: conf.image,
-      href: conf.href || '#',
+      title: newItem.title,
+      category: newItem.category,
+      date: newItem.date,
+      location: newItem.location,
+      description: packedDescription, // Permanent cross-device fallback stored directly in Supabase
+      image: newItem.image,
+      href: newItem.href,
     }
-    if (conf.theme !== undefined) payload.theme = conf.theme
-    if (conf.sessions !== undefined) payload.sessions = conf.sessions
-    if (conf.images !== undefined) payload.images = conf.images
+    // Also save directly to dedicated columns if they exist in Supabase
+    payload.theme = theme
+    payload.sessions = sessions
+    payload.images = images
 
     let { error } = await supabase
       .from('conferences')
       .upsert(payload, { onConflict: 'id' })
 
-    // If Supabase table does not yet have theme, sessions, or images columns, gracefully fallback without them
-    if (error && (error.message.includes('theme') || error.message.includes('sessions') || error.message.includes('images'))) {
-      delete payload.theme
-      delete payload.sessions
-      delete payload.images
+    // If Supabase table does not yet have certain columns, gracefully remove only the missing column(s)
+    if (error) {
+      console.warn('[Supabase] Initial upsert notice, applying column fallback:', error.message)
+      if (error.message.includes('images')) {
+        delete payload.images
+      }
+      if (error.message.includes('sessions')) {
+        delete payload.sessions
+      }
+      if (error.message.includes('theme')) {
+        delete payload.theme
+      }
       const retry = await supabase.from('conferences').upsert(payload, { onConflict: 'id' })
       error = retry.error
+
+      // If still erroring on any schema/column issue, save base columns (description still contains all theme/sessions data)
+      if (error && (error.message.includes('column') || error.message.includes('schema'))) {
+        delete payload.theme
+        delete payload.sessions
+        delete payload.images
+        const baseRetry = await supabase.from('conferences').upsert(payload, { onConflict: 'id' })
+        error = baseRetry.error
+      }
     }
 
     if (error) return { success: false, error: error.message }

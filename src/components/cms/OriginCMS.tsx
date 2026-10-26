@@ -12,7 +12,7 @@ import {
   getSpeakers, upsertSpeaker, deleteSpeaker,
   getGallery, upsertGalleryItem, deleteGalleryItem,
   getNewsletterSubscribers, getEventRegistrations, getContactInquiries,
-  isSupabaseConfigured
+  isSupabaseConfigured, unpackConferenceData
 } from '../../lib/supabase'
 import {
   categories,
@@ -244,14 +244,24 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
     if (!editingConference?.title) return
     setLoading(true)
     const confId = editingConference.id || 'c_' + Date.now().toString(36)
+
+    // Automatically incorporate any pending session typed into the input
+    let sessionsStr = editingConference.sessions || ''
+    if (newSessionInput.trim()) {
+      const currentSessions = parseSessionsList(sessionsStr)
+      if (!currentSessions.includes(newSessionInput.trim())) {
+        sessionsStr = [...currentSessions, newSessionInput.trim()].join(', ')
+      }
+    }
+
     const res = await upsertConference({
       id: confId,
       title: editingConference.title,
       category: (editingConference.category as Category) || 'Technology & Innovation',
       date: editingConference.date || 'Date to be announced',
       location: editingConference.location || 'Virtual / Hybrid',
-      theme: editingConference.theme || '',
-      sessions: editingConference.sessions || '',
+      theme: (editingConference.theme || '').trim(),
+      sessions: sessionsStr,
       description: editingConference.description || '',
       image: editingConference.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=70',
       images: editingConference.images || [],
@@ -259,6 +269,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
     })
     setLoading(false)
     if (res.success) {
+      setNewSessionInput('')
       showToast('Conference published live to Supabase!')
       setEditingConference(null)
       loadData()
@@ -699,38 +710,53 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                 </div>
 
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {conferences.map((c) => (
-                    <div key={c.id} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-gold/50">
-                      <div className="relative aspect-video overflow-hidden rounded-xl">
-                        <img src={c.image} alt={c.title} className="h-full w-full object-cover" />
-                        <span className="absolute top-2 left-2 rounded-full bg-navy-950/80 px-2.5 py-0.5 text-[11px] font-semibold text-gold">
-                          {c.category}
-                        </span>
-                      </div>
-                      <div className="mt-4">
-                        <h3 className="font-display text-base font-semibold line-clamp-1">{c.title}</h3>
-                        <p className="text-xs text-white/50 mt-1">{c.date} • {c.location}</p>
-                        {c.theme && <p className="text-xs text-gold/90 mt-1 font-medium line-clamp-1"><span className="text-white/40 uppercase text-[10px] font-bold">Theme:</span> {c.theme}</p>}
-                        {c.sessions && <p className="text-xs text-white/60 mt-0.5 line-clamp-1"><span className="text-white/40 uppercase text-[10px] font-bold">Sessions:</span> {c.sessions}</p>}
-                        <p className="text-xs text-white/70 mt-2 line-clamp-2">{c.description}</p>
-                      </div>
+                  {conferences.map((c) => {
+                    const unpacked = unpackConferenceData(c.description)
+                    const displayTheme = c.theme || unpacked.theme || ''
+                    const displaySessions = c.sessions || unpacked.sessions || ''
+                    const displayDesc = (unpacked.description || c.description || '').replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '').trim()
 
-                      <div className="mt-4 flex items-center justify-end gap-2 border-t border-white/10 pt-3">
-                        <button
-                          onClick={() => setEditingConference(c)}
-                          className="flex items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/20"
-                        >
-                          <Edit2 size={13} /> Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteConference(c.id)}
-                          className="flex items-center gap-1 rounded-lg bg-rose-500/20 px-3 py-1.5 text-xs text-rose-300 hover:bg-rose-500/30"
-                        >
-                          <Trash2 size={13} /> Delete
-                        </button>
+                    return (
+                      <div key={c.id} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:border-gold/50">
+                        <div className="relative aspect-video overflow-hidden rounded-xl">
+                          <img src={c.image} alt={c.title} className="h-full w-full object-cover" />
+                          <span className="absolute top-2 left-2 rounded-full bg-navy-950/80 px-2.5 py-0.5 text-[11px] font-semibold text-gold">
+                            {c.category}
+                          </span>
+                        </div>
+                        <div className="mt-4">
+                          <h3 className="font-display text-base font-semibold line-clamp-1">{c.title}</h3>
+                          <p className="text-xs text-white/50 mt-1">{c.date} • {c.location}</p>
+                          {displayTheme && <p className="text-xs text-gold/90 mt-1 font-medium line-clamp-1"><span className="text-white/40 uppercase text-[10px] font-bold">Theme:</span> {displayTheme}</p>}
+                          {displaySessions && <p className="text-xs text-white/60 mt-0.5 line-clamp-1"><span className="text-white/40 uppercase text-[10px] font-bold">Sessions:</span> {displaySessions}</p>}
+                          <p className="text-xs text-white/70 mt-2 line-clamp-2">{displayDesc}</p>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-end gap-2 border-t border-white/10 pt-3">
+                          <button
+                            onClick={() => {
+                              setEditingConference({
+                                ...c,
+                                description: displayDesc,
+                                theme: displayTheme,
+                                sessions: displaySessions,
+                                images: (Array.isArray(c.images) && c.images.length > 0) ? c.images : (unpacked.images.length > 0 ? unpacked.images : [])
+                              })
+                            }}
+                            className="flex items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/20"
+                          >
+                            <Edit2 size={13} /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteConference(c.id)}
+                            className="flex items-center gap-1 rounded-lg bg-rose-500/20 px-3 py-1.5 text-xs text-rose-300 hover:bg-rose-500/30"
+                          >
+                            <Trash2 size={13} /> Delete
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}

@@ -7,7 +7,7 @@ import {
   Send, X, Maximize2
 } from 'lucide-react'
 import { type Conference } from '../data/content'
-import { submitEventRegistration, getConferences } from '../lib/supabase'
+import { submitEventRegistration, getConferences, unpackConferenceData } from '../lib/supabase'
 
 interface ConferenceDetailsPageProps {
   conference: Conference
@@ -57,10 +57,20 @@ export default function ConferenceDetailsPage({
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [conference.id])
 
-  const sessions = parseSessionsList(conference.sessions)
-  const middleImages = Array.isArray(conference.images) ? conference.images : []
-  const aboutParagraphs = conference.description
-    ? conference.description.split(/\n\s*\n|\n/).map((p) => p.trim()).filter(Boolean)
+  // Extract resilient theme, sessions, and images (from direct columns or embedded metadata)
+  const unpacked = unpackConferenceData(conference.description)
+  const effectiveTheme = conference.theme || unpacked.theme || ''
+  const effectiveSessions = conference.sessions || unpacked.sessions || ''
+  const effectiveImages = (Array.isArray(conference.images) && conference.images.length > 0)
+    ? conference.images
+    : (unpacked.images.length > 0 ? unpacked.images : [])
+  const sessions = parseSessionsList(effectiveSessions)
+  const middleImages = effectiveImages
+  const cleanDescription = (unpacked.description || conference.description || '')
+    .replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '')
+    .trim()
+  const aboutParagraphs = cleanDescription
+    ? cleanDescription.split(/\n\s*\n|\n/).map((p) => p.trim()).filter(Boolean)
     : []
 
   function handleShare() {
@@ -150,7 +160,7 @@ export default function ConferenceDetailsPage({
         <div className="container-x flex items-center justify-between">
           <div className="flex items-center gap-1 text-xs font-semibold text-slate-300">
             <a href="#about" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">About</a>
-            {conference.theme && (
+            {effectiveTheme && (
               <a href="#theme" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Theme</a>
             )}
             {middleImages.length > 0 && (
@@ -201,9 +211,9 @@ export default function ConferenceDetailsPage({
               </h1>
 
               {/* Theme highlight if present */}
-              {conference.theme && (
+              {effectiveTheme && (
                 <p className="mt-5 text-base sm:text-lg text-amber-300/90 leading-relaxed max-w-2xl font-medium italic">
-                  "{conference.theme}"
+                  "{effectiveTheme}"
                 </p>
               )}
 
@@ -364,7 +374,7 @@ export default function ConferenceDetailsPage({
         </section>
 
         {/* 2. THEME SECTION */}
-        {conference.theme && (
+        {effectiveTheme && (
           <section id="theme" className="scroll-mt-28 w-full rounded-3xl border border-amber-400/30 bg-gradient-to-br from-slate-900 via-navy-950 to-slate-900 p-6 sm:p-10 lg:p-12 xl:p-14 shadow-2xl backdrop-blur-xl relative overflow-hidden">
             <div className="pointer-events-none absolute -left-20 -bottom-20 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
 
@@ -379,7 +389,7 @@ export default function ConferenceDetailsPage({
 
               <div className="mt-8 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-400/10 via-amber-500/5 to-transparent p-6 sm:p-10 lg:p-12 backdrop-blur-md">
                 <p className="font-display text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-amber-300 leading-snug tracking-tight">
-                  "{conference.theme}"
+                  "{effectiveTheme}"
                 </p>
                 <p className="mt-4 text-xs sm:text-sm lg:text-base text-slate-300 leading-relaxed max-w-5xl">
                   Guiding the academic tracks, keynote presentations, clinical demonstrations, and multidisciplinary roundtable discussions for this congress.
