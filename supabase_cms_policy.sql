@@ -44,7 +44,10 @@ CREATE POLICY "Allow CMS manage upcoming_events" ON public.upcoming_events FOR A
 
 DROP POLICY IF EXISTS "Allow public read on testimonials" ON public.testimonials;
 DROP POLICY IF EXISTS "Allow CMS manage testimonials" ON public.testimonials;
-CREATE POLICY "Allow CMS manage testimonials" ON public.testimonials FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public read on testimonials" ON public.testimonials FOR SELECT USING (true);
+CREATE POLICY "Allow CMS insert testimonials" ON public.testimonials FOR INSERT TO anon, authenticated WITH CHECK (id IS NOT NULL);
+CREATE POLICY "Allow CMS update testimonials" ON public.testimonials FOR UPDATE TO anon, authenticated USING (id IS NOT NULL) WITH CHECK (id IS NOT NULL);
+CREATE POLICY "Allow CMS delete testimonials" ON public.testimonials FOR DELETE TO anon, authenticated USING (id IS NOT NULL);
 
 DROP POLICY IF EXISTS "Allow public read on statistics" ON public.statistics;
 DROP POLICY IF EXISTS "Allow CMS manage statistics" ON public.statistics;
