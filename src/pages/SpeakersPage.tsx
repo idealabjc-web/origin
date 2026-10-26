@@ -22,7 +22,7 @@ export default function SpeakersPage() {
   useEffect(() => {
     function load() {
       getSpeakers().then((data) => {
-        if (data && data.length > 0) setSpeakersList(data)
+        if (Array.isArray(data)) setSpeakersList(data)
       })
     }
     load()

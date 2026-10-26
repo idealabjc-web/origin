@@ -106,7 +106,7 @@ export default function App() {
   useEffect(() => {
     function loadConferences() {
       getConferences().then((data) => {
-        if (data && data.length > 0) {
+        if (Array.isArray(data)) {
           setConferenceList(data)
         }
       })

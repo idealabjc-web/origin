@@ -16,7 +16,7 @@ export default function ConferencesPage({
   useEffect(() => {
     function load() {
       getConferences().then((res) => {
-        if (res && res.length > 0) setData(res)
+        if (Array.isArray(res)) setData(res)
       })
     }
     load()
