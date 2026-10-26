@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, CalendarDays, MapPin,
   Share2, Ticket, ChevronRight,
-  Layers, Send, X, Maximize2
+  Layers, Send, X, Maximize2,
+  BookOpen, Quote, ArrowUpRight, Sparkles
 } from 'lucide-react'
 import { type Conference } from '../data/content'
 import { submitEventRegistration, getConferences, unpackConferenceData } from '../lib/supabase'
@@ -293,19 +294,30 @@ export default function ConferenceDetailsPage({
 
         {/* 1. ABOUT SECTION */}
         <section id="about" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 lg:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
           <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
           <div className="pointer-events-none absolute -left-20 -bottom-20 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
 
           <div className="relative">
+            <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-amber-400 mb-2">
+              <BookOpen size={15} /> Overview
+            </div>
             <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl">
               About the Conference
             </h2>
-            <div className="mt-3 h-1.5 w-24 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
+            <div className="mt-3 h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
 
-            <div className="mt-6 space-y-4 text-base sm:text-lg lg:text-xl leading-relaxed text-slate-200">
+            <div className="mt-6 space-y-4 text-base sm:text-lg leading-relaxed">
               {aboutParagraphs.length > 0 ? (
                 aboutParagraphs.map((para, idx) => (
-                  <p key={idx} className="leading-relaxed text-slate-200">
+                  <p
+                    key={idx}
+                    className={
+                      idx === 0
+                        ? 'text-slate-100 font-medium text-lg sm:text-xl leading-relaxed border-l-2 border-amber-400/80 pl-5 bg-gradient-to-r from-amber-400/[0.06] via-amber-400/[0.02] to-transparent py-3 rounded-r-2xl'
+                        : 'text-slate-300/90 leading-relaxed'
+                    }
+                  >
                     {para}
                   </p>
                 ))
@@ -319,16 +331,21 @@ export default function ConferenceDetailsPage({
         {/* 2. THEME SECTION */}
         {effectiveTheme && (
           <section id="theme" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
             <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
 
             <div className="relative">
+              <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-amber-400 mb-2">
+                <Sparkles size={15} /> Conference Theme
+              </div>
               <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl">
-                Conference Theme
+                Official Congress Theme
               </h2>
-              <div className="mt-3 h-1.5 w-24 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
+              <div className="mt-3 h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
 
-              <div className="mt-5 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-5 sm:p-6 backdrop-blur-sm">
-                <p className="font-display text-base sm:text-lg lg:text-xl font-semibold text-amber-300/90 leading-relaxed italic">
+              <div className="mt-5 relative overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-500/[0.08] via-slate-900/80 to-navy-950 p-6 sm:p-7 shadow-[0_4px_25px_-5px_rgba(245,158,11,0.15)] backdrop-blur-md">
+                <Quote className="absolute -top-2 -left-2 text-amber-400/15 pointer-events-none" size={60} />
+                <p className="relative font-display text-base sm:text-lg lg:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-100 to-amber-300 leading-relaxed italic">
                   "{effectiveTheme}"
                 </p>
               </div>
@@ -338,12 +355,16 @@ export default function ConferenceDetailsPage({
 
         {/* 3. MIDDLE IMAGES SECTION (CONFERENCE GALLERY) */}
         {middleImages.length > 0 && (
-          <section id="gallery" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 lg:p-10 shadow-2xl backdrop-blur-xl">
+          <section id="gallery" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 lg:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
             <div>
+              <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-amber-400 mb-2">
+                <Sparkles size={15} /> Highlights
+              </div>
               <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl">
                 Conference Gallery
               </h2>
-              <div className="mt-3 h-1.5 w-24 rounded-full bg-amber-400" />
+              <div className="mt-3 h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
             </div>
 
             <div className={`mt-6 grid gap-4 sm:gap-6 ${
@@ -383,26 +404,35 @@ export default function ConferenceDetailsPage({
 
         {/* 4. SESSIONS SECTION */}
         {sessions.length > 0 && (
-          <section id="sessions" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 lg:p-10 shadow-2xl backdrop-blur-xl">
+          <section id="sessions" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 lg:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
             <div>
+              <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-amber-400 mb-2">
+                <Layers size={15} /> Curriculum
+              </div>
               <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl">
                 Sessions
               </h2>
-              <div className="mt-3 h-1.5 w-24 rounded-full bg-amber-400" />
+              <div className="mt-3 h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {sessions.map((sess, idx) => (
                 <div
                   key={idx}
-                  className="group rounded-2xl border border-white/10 bg-slate-950/80 p-5 transition-all duration-300 hover:border-amber-400/50 hover:bg-slate-950 hover:-translate-y-1 hover:shadow-xl flex items-center gap-4"
+                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/90 via-slate-950/90 to-navy-950/80 p-5 shadow-lg backdrop-blur-md transition-all duration-300 hover:border-amber-400/60 hover:-translate-y-1.5 hover:shadow-[0_12px_30px_-8px_rgba(245,158,11,0.25)] flex items-start gap-4"
                 >
-                  <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-amber-400/20 text-xs font-black text-amber-400 font-mono">
+                  <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/0 to-transparent group-hover:via-amber-400/70 transition-all duration-500" />
+                  <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-gradient-to-br from-amber-400/25 to-amber-500/10 border border-amber-400/40 text-sm font-black text-amber-300 font-mono shadow-[0_0_12px_rgba(251,191,36,0.2)] group-hover:from-amber-400 group-hover:to-amber-500 group-hover:text-navy-950 group-hover:border-amber-300 transition-all duration-300">
                     {idx < 9 ? `0${idx + 1}` : idx + 1}
                   </span>
-                  <h3 className="font-display text-sm sm:text-base font-bold text-white group-hover:text-amber-300 transition leading-snug">
+                  <h3 className="font-display text-sm sm:text-base font-bold text-white group-hover:text-amber-300 transition-colors leading-snug flex-1 pt-1">
                     {sess}
                   </h3>
+                  <ArrowUpRight
+                    size={16}
+                    className="text-amber-400/40 group-hover:text-amber-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300 flex-shrink-0 mt-1"
+                  />
                 </div>
               ))}
             </div>
@@ -416,10 +446,13 @@ export default function ConferenceDetailsPage({
           <div className="grid gap-8 lg:grid-cols-12 lg:gap-12 lg:items-center relative">
             {/* Left Column: Heading */}
             <div className="lg:col-span-5 space-y-4">
+              <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-amber-400">
+                <Ticket size={15} /> Delegate Pass
+              </div>
               <h2 className="font-display text-3xl font-extrabold text-white sm:text-4xl xl:text-5xl tracking-tight leading-tight">
                 Register for this Conference
               </h2>
-              <div className="h-1.5 w-24 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
+              <div className="h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
               <p className="text-sm sm:text-base text-slate-300 leading-relaxed pt-2">
                 Register your participation for <strong className="text-white">{conference.title}</strong>.
               </p>
