@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   X, Plus, Edit2, Trash2, CheckCircle2, AlertCircle, RefreshCw,
   Layers, Calendar, MessageSquareQuote, BarChart3, Mail, Users, FileText,
-  Download, Eye, ShieldCheck, Mic, Image as ImageIcon
+  Download, Eye, ShieldCheck, Mic, Image as ImageIcon, UploadCloud
 } from 'lucide-react'
 import {
   getConferences, upsertConference, deleteConference,
@@ -11,7 +11,8 @@ import {
   getStatistics, updateStatistic,
   getSpeakers, upsertSpeaker, deleteSpeaker,
   getGallery, upsertGalleryItem, deleteGalleryItem,
-  getNewsletterSubscribers, getEventRegistrations, getContactInquiries
+  getNewsletterSubscribers, getEventRegistrations, getContactInquiries,
+  isSupabaseConfigured
 } from '../../lib/supabase'
 import {
   categories,
@@ -33,6 +34,44 @@ type Tab =
   | 'subscribers'
   | 'registrations'
   | 'inquiries'
+
+function processImageFile(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const maxDim = 1920
+        let { width, height } = img
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width)
+            width = maxDim
+          } else {
+            width = Math.round((width * maxDim) / height)
+            height = maxDim
+          }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          resolve(e.target?.result as string)
+          return
+        }
+        ctx.drawImage(img, 0, 0, width, height)
+        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+        const dataUrl = canvas.toDataURL(mime, 0.85)
+        resolve(dataUrl)
+      }
+      img.onerror = () => resolve(e.target?.result as string)
+      img.src = e.target?.result as string
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
 
 export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<Tab>('conferences')
@@ -63,6 +102,30 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
   const [editingSpeaker, setEditingSpeaker] = useState<Partial<Speaker> | null>(null)
   const [editingGallery, setEditingGallery] = useState<Partial<GalleryItem> & { id?: string } | null>(null)
   const [editingTestimonial, setEditingTestimonial] = useState<Partial<Testimonial> | null>(null)
+
+  // Drag & drop image upload state
+  const [isDraggingImage, setIsDraggingImage] = useState(false)
+  const [imageProcessing, setImageProcessing] = useState(false)
+  const confFileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleDropConferenceImage(file: File) {
+    if (!file || !file.type.startsWith('image/')) {
+      showToast('Please select a valid image file (PNG, JPG, WEBP, GIF)', 'error')
+      return
+    }
+    try {
+      setImageProcessing(true)
+      const processedUrl = await processImageFile(file)
+      if (editingConference) {
+        setEditingConference({ ...editingConference, image: processedUrl })
+      }
+      showToast('Cover image updated successfully!')
+    } catch (err: any) {
+      showToast('Failed to process image: ' + err.message, 'error')
+    } finally {
+      setImageProcessing(false)
+    }
+  }
 
   function showToast(text: string, type: 'ok' | 'error' = 'ok') {
     setToast({ text, type })
@@ -131,6 +194,8 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
       category: (editingConference.category as Category) || 'Technology & Innovation',
       date: editingConference.date || 'Date to be announced',
       location: editingConference.location || 'Virtual / Hybrid',
+      theme: editingConference.theme || '',
+      sessions: editingConference.sessions || '',
       description: editingConference.description || '',
       image: editingConference.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=70',
       href: editingConference.href || '#'
@@ -366,10 +431,17 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
           <div>
             <h1 className="font-display text-lg font-semibold flex items-center gap-2">
               ORIGIN Content Studio
-              <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Live Supabase Connected
-              </span>
+              {isSupabaseConfigured ? (
+                <span className="flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-medium text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Supabase Connected
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[11px] font-medium text-amber-300 border border-amber-500/30">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  Local Storage Mode
+                </span>
+              )}
             </h1>
           </div>
         </div>
@@ -531,6 +603,18 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
           {/* Tab Content Area */}
           <main className="flex-1 overflow-y-auto p-8">
+            {!isSupabaseConfigured && (
+              <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-200 backdrop-blur-md flex items-start gap-3">
+                <AlertCircle size={18} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-white">Notice: Supabase Environment Variables Missing on Production</p>
+                  <p className="text-amber-200/90 leading-relaxed">
+                    Your changes (including Deletes, Edits, and Additions) are currently saving to <strong>Local Storage</strong> in your browser. To sync live across all global visitors, please add <code className="bg-black/40 px-1.5 py-0.5 rounded text-amber-300 font-mono">VITE_SUPABASE_URL</code> and <code className="bg-black/40 px-1.5 py-0.5 rounded text-amber-300 font-mono">VITE_SUPABASE_ANON_KEY</code> to your hosting environment variables (e.g. Vercel dashboard).
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* 1. CONFERENCES TAB */}
             {activeTab === 'conferences' && (
               <div className="space-y-6 max-w-6xl">
@@ -545,6 +629,8 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                       category: 'Healthcare & Life Sciences',
                       date: 'Date to be announced',
                       location: 'Location to be announced',
+                      theme: '',
+                      sessions: '',
                       description: '',
                       image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=900&q=70',
                       href: '#'
@@ -567,6 +653,8 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                       <div className="mt-4">
                         <h3 className="font-display text-base font-semibold line-clamp-1">{c.title}</h3>
                         <p className="text-xs text-white/50 mt-1">{c.date} • {c.location}</p>
+                        {c.theme && <p className="text-xs text-gold/90 mt-1 font-medium line-clamp-1"><span className="text-white/40 uppercase text-[10px] font-bold">Theme:</span> {c.theme}</p>}
+                        {c.sessions && <p className="text-xs text-white/60 mt-0.5 line-clamp-1"><span className="text-white/40 uppercase text-[10px] font-bold">Sessions:</span> {c.sessions}</p>}
                         <p className="text-xs text-white/70 mt-2 line-clamp-2">{c.description}</p>
                       </div>
 
@@ -1057,6 +1145,28 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
               </div>
 
               <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Theme</label>
+                <input
+                  type="text"
+                  value={editingConference.theme || ''}
+                  onChange={(e) => setEditingConference({ ...editingConference, theme: e.target.value })}
+                  placeholder="e.g. Advancing Global Healthcare & Nursing Practice"
+                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Sessions</label>
+                <input
+                  type="text"
+                  value={editingConference.sessions || ''}
+                  onChange={(e) => setEditingConference({ ...editingConference, sessions: e.target.value })}
+                  placeholder="e.g. Nursing Education, Clinical Practice, Pediatrics, Midwifery, Oncology"
+                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Description</label>
                 <textarea
                   rows={3}
@@ -1068,19 +1178,117 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Cover Image URL</label>
-                <input
-                  type="text"
-                  value={editingConference.image || ''}
-                  onChange={(e) => setEditingConference({ ...editingConference, image: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
-                />
-                {editingConference.image && (
-                  <div className="mt-2 aspect-video w-36 overflow-hidden rounded-lg border border-white/20">
-                    <img src={editingConference.image} alt="Preview" className="h-full w-full object-cover" />
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5">
+                  Cover Image
+                </label>
+
+                {editingConference.image ? (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setIsDraggingImage(true)
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault()
+                      setIsDraggingImage(false)
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      setIsDraggingImage(false)
+                      const file = e.dataTransfer.files?.[0]
+                      if (file) handleDropConferenceImage(file)
+                    }}
+                    className={`relative group overflow-hidden rounded-2xl border bg-white/5 p-3 transition-all ${
+                      isDraggingImage ? 'border-gold bg-gold/15' : 'border-white/20'
+                    }`}
+                  >
+                    <div className="relative aspect-video w-full max-h-56 overflow-hidden rounded-xl bg-navy-950">
+                      <img
+                        src={editingConference.image}
+                        alt="Conference Cover Preview"
+                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => confFileInputRef.current?.click()}
+                          className="rounded-full bg-gold px-4 py-2 text-xs font-bold text-navy-950 hover:bg-gold-light transition shadow-lg flex items-center gap-1.5"
+                        >
+                          <UploadCloud size={14} /> Replace Image
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingConference({ ...editingConference, image: '' })}
+                          className="rounded-full bg-rose-600/90 hover:bg-rose-600 px-4 py-2 text-xs font-bold text-white transition shadow-lg flex items-center gap-1.5"
+                        >
+                          <Trash2 size={14} /> Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 flex items-center justify-between px-1 text-xs text-white/60">
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 size={13} className="text-emerald-400" />
+                        Image loaded (Drop new image or click Replace)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => confFileInputRef.current?.click()}
+                        className="text-gold hover:underline text-xs"
+                      >
+                        Browse computer
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setIsDraggingImage(true)
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault()
+                      setIsDraggingImage(false)
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      setIsDraggingImage(false)
+                      const file = e.dataTransfer.files?.[0]
+                      if (file) handleDropConferenceImage(file)
+                    }}
+                    onClick={() => confFileInputRef.current?.click()}
+                    className={`group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer ${
+                      isDraggingImage
+                        ? 'border-gold bg-gold/15 scale-[1.01]'
+                        : 'border-white/20 bg-white/5 hover:border-gold/60 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="grid h-14 w-14 place-items-center rounded-full bg-gold/10 text-gold group-hover:scale-110 transition-transform mb-3">
+                      <UploadCloud size={28} />
+                    </div>
+                    <p className="text-sm font-semibold text-white">
+                      {imageProcessing ? 'Processing image...' : 'Drag and drop your image here'}
+                    </p>
+                    <p className="mt-1 text-xs text-white/50">
+                      or <span className="text-gold underline font-medium">browse files</span> from your computer
+                    </p>
+                    <p className="mt-2 text-[11px] text-white/40">
+                      PNG, JPG, WEBP, or GIF (auto-optimized)
+                    </p>
                   </div>
                 )}
+
+                <input
+                  ref={confFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleDropConferenceImage(file)
+                    e.target.value = ''
+                  }}
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-white/10">

@@ -4,12 +4,15 @@
 -- Run this in your Supabase SQL Editor:
 -- Supabase Dashboard -> SQL Editor -> New Query -> Paste & Run
 
--- 1. CLEAN UP PREVIOUS DEMO DATA
+-- 1. ENSURE COLUMNS EXIST & CLEAN UP PREVIOUS DEMO DATA
+ALTER TABLE public.conferences ADD COLUMN IF NOT EXISTS theme TEXT DEFAULT '';
+ALTER TABLE public.conferences ADD COLUMN IF NOT EXISTS sessions TEXT DEFAULT '';
+
 DELETE FROM public.conferences WHERE id IN ('c1', 'c2', 'c3', 'c4');
 DELETE FROM public.upcoming_events WHERE id IN ('e1', 'e2', 'e3');
 
 -- 2. INSERT THE 3 REAL CONFERENCES
-INSERT INTO public.conferences (id, title, category, date, location, description, image, href, display_order)
+INSERT INTO public.conferences (id, title, category, date, location, theme, sessions, description, image, href, display_order)
 VALUES
   (
     'gnsc-2027',
@@ -17,6 +20,8 @@ VALUES
     'Healthcare & Life Sciences',
     '2027 (Dates to be announced)',
     'London, UK / Hybrid',
+    'Advancing Global Healthcare & Nursing Practice',
+    'Nursing Education, Clinical Practice, Pediatrics, Midwifery, Oncology',
     'An international integrated congress advancing clinical nursing, pediatric care, oncology nursing, patient safety models, and modern nursing education with world-leading healthcare scientists.',
     'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=900&q=70',
     '#conferences',
@@ -28,6 +33,8 @@ VALUES
     'Business & Leadership',
     '2027 (Dates to be announced)',
     'Geneva, Switzerland / Hybrid',
+    'Transformative Entrepreneurship & Agile Leadership',
+    'Disruptive Innovation, Venture Capital, Enterprise AI, Scale-Up Execution',
     'Empowering emerging leaders and entrepreneurs through lean startup methodology, venture capital, strategic leadership, rapid prototyping, and digital market transformation.',
     'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=900&q=70',
     '#conferences',
@@ -39,6 +46,8 @@ VALUES
     'Healthcare & Life Sciences',
     '2027 (Dates to be announced)',
     'Paris, France / Hybrid',
+    'Cutting-Edge Discoveries in Modern Dentistry & Prosthodontics',
+    'Digital Dentistry, Intraoral CAD/CAM, Guided Implantology, Aesthetic Lasers',
     'A phenomenal summit uniting world leaders in Prosthodontics, Digital Dentistry, Oral Surgery, Laser & Aesthetic Dentistry, Implantology, and Dental Practice Management.',
     'https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=900&q=70',
     '#conferences',
@@ -49,6 +58,8 @@ ON CONFLICT (id) DO UPDATE SET
   category = EXCLUDED.category,
   date = EXCLUDED.date,
   location = EXCLUDED.location,
+  theme = EXCLUDED.theme,
+  sessions = EXCLUDED.sessions,
   description = EXCLUDED.description,
   image = EXCLUDED.image,
   href = EXCLUDED.href,

@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS public.conferences (
   category TEXT NOT NULL,
   date TEXT NOT NULL,
   location TEXT NOT NULL,
+  theme TEXT DEFAULT '',
+  sessions TEXT DEFAULT '',
   description TEXT NOT NULL,
   image TEXT NOT NULL,
   href TEXT DEFAULT '#',

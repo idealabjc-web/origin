@@ -45,7 +45,18 @@ export const stats = [
 export type Category = 'Healthcare & Life Sciences' | 'Technology & Innovation' | 'Business & Leadership' | 'Research & Academia'
 export const categories: Category[] = ['Healthcare & Life Sciences', 'Technology & Innovation', 'Business & Leadership', 'Research & Academia']
 
-export interface Conference { id: string; title: string; category: Category; date: string; location: string; description: string; image: string; href: string }
+export interface Conference {
+  id: string
+  title: string
+  category: Category
+  date: string
+  location: string
+  description: string
+  image: string
+  href: string
+  theme?: string
+  sessions?: string
+}
 export const conferences: Conference[] = [
   {
     id: 'gnsc-2027',
@@ -53,6 +64,8 @@ export const conferences: Conference[] = [
     category: 'Healthcare & Life Sciences',
     date: '2027 (Dates to be announced)',
     location: 'London, UK / Hybrid',
+    theme: 'Advancing Global Healthcare & Nursing Practice',
+    sessions: 'Nursing Education, Clinical Practice, Pediatrics, Midwifery, Oncology',
     description: 'An international integrated congress anticipating participants from across the globe with thought-provoking Keynote lectures, Oral and Poster presentations, and clinical workshops across Nursing Education, Clinical Practice, Pediatrics, Midwifery, Oncology, and Emergency Care.',
     image: u('photo-1576091160399-112ba8d25d1d', 900),
     href: '#conferences'
@@ -63,6 +76,8 @@ export const conferences: Conference[] = [
     category: 'Business & Leadership',
     date: '2027 (Dates to be announced)',
     location: 'Geneva, Switzerland / Hybrid',
+    theme: 'Transformative Entrepreneurship & Agile Leadership',
+    sessions: 'Disruptive Innovation, Venture Capital, Enterprise AI, Scale-Up Execution',
     description: 'A global congress introducing the transformative power of entrepreneurship, startup accessibility, lean startup principles, and hands-on rapid prototyping to empower emerging leaders in marketing, finance, and management.',
     image: u('photo-1556761175-5973dc0f32e7', 900),
     href: '#conferences'
@@ -73,6 +88,8 @@ export const conferences: Conference[] = [
     category: 'Healthcare & Life Sciences',
     date: '2027 (Dates to be announced)',
     location: 'Paris, France / Hybrid',
+    theme: 'Cutting-Edge Discoveries in Modern Dentistry & Prosthodontics',
+    sessions: 'Digital Dentistry, Intraoral CAD/CAM, Guided Implantology, Aesthetic Lasers',
     description: 'A phenomenal international occasion featuring exciting speakers, hands-on clinical sessions, and cutting-edge discoveries across Prosthodontics, Digital Dentistry, Oral Surgery, Laser & Aesthetic Dentistry, and Implantology.',
     image: u('photo-1629909613654-28e377c37b09', 900),
     href: '#conferences'

@@ -657,9 +657,9 @@ export default function ConferenceDetailsPage({
                 </span>
               </h1>
 
-              {/* Tagline */}
+              {/* Tagline / Theme */}
               <p className="mt-6 text-base sm:text-lg text-slate-200 leading-relaxed max-w-2xl font-medium">
-                {rich.tagline}
+                {conference.theme || rich.tagline}
               </p>
 
               {/* 4 Interactive Glassmorphism Micro-Cards */}

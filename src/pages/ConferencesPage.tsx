@@ -140,6 +140,11 @@ export default function ConferencesPage({
                       <h3 className="font-display text-xl font-bold text-navy-950 group-hover:text-gold-dark transition leading-snug">
                         {c.title}
                       </h3>
+                      {c.theme && (
+                        <p className="mt-1.5 text-xs font-semibold text-gold-dark line-clamp-1 italic">
+                          {c.theme}
+                        </p>
+                      )}
                       <div className="mt-4 space-y-2 text-xs text-charcoal/70 font-medium">
                         <p className="flex items-center gap-2">
                           <CalendarDays size={15} className="text-gold-dark flex-shrink-0" />
