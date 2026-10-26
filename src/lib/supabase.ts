@@ -45,7 +45,7 @@ const LOCAL_CONFS_KEY = 'origin_conferences_local'
 const LOCAL_EVENTS_KEY = 'origin_events_local'
 const LOCAL_SPEAKERS_KEY = 'origin_speakers_local'
 const LOCAL_TESTIMONIALS_KEY = 'origin_testimonials_local'
-const LOCAL_GALLERY_KEY = 'origin_gallery_local'
+const LOCAL_GALLERY_KEY = 'origin_gallery_v2_local'
 
 function getLocalItem<T>(key: string, defaultValue: T): T {
   if (typeof window === 'undefined') return defaultValue
@@ -220,7 +220,7 @@ export async function getGallery(): Promise<GalleryItem[]> {
       .select('*')
       .order('display_order', { ascending: true })
 
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
       return getLocalItem<GalleryItem[]>(LOCAL_GALLERY_KEY, defaultGallery)
     }
 

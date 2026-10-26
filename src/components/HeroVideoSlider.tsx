@@ -224,7 +224,6 @@ export default function HeroVideoSlider() {
             ))}
           </div>
 
-          {/* ── Progress bar ─────────────────────────────────────────── */}
           <motion.div
             key={`bar-${current}`}
             initial={{ scaleX: 0 }}
@@ -234,6 +233,9 @@ export default function HeroVideoSlider() {
           />
         </>
       )}
+
+      {/* Bottom transition blend */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-navy-950/80 to-transparent z-10" />
     </section>
   </>
 )

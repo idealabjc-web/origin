@@ -34,7 +34,7 @@ export default function StatisticsStrip() {
   }, [])
 
   return (
-    <section id="stats" aria-label="Key figures" className="bg-navy-900 py-12">
+    <section id="stats" aria-label="Key figures" className="relative z-10 bg-gradient-to-r from-navy-950 via-navy-900 to-navy-950 border-y border-white/10 py-12 lg:py-14 shadow-lg">
       <dl className="container-x grid grid-cols-2 gap-y-10 lg:grid-cols-4">
         {items.map((s, k) => (
           <div key={s.label} className={`px-2 sm:px-4 text-center ${k > 0 ? 'lg:border-l lg:border-white/15' : ''} ${k % 2 ? 'border-l border-white/15' : ''}`}>

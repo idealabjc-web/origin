@@ -116,11 +116,17 @@ export const services: Service[] = [
 export interface GalleryItem { src: string; thumb: string; alt: string; span: string }
 export const gallery: GalleryItem[] = [
   { src: u('photo-1540575467063-178a50c2df87'), thumb: u('photo-1540575467063-178a50c2df87', 900), alt: 'Large conference audience facing the main stage', span: 'md:col-span-2 md:row-span-2' },
-  { src: u('photo-1505373877841-8d25f7d46678'), thumb: u('photo-1505373877841-8d25f7d46678', 600), alt: 'Keynote presentation in a lit auditorium', span: '' },
-  { src: u('photo-1515187029135-18ee286d815b'), thumb: u('photo-1515187029135-18ee286d815b', 600), alt: 'Professionals networking during a break', span: '' },
-  { src: u('photo-1517457373958-b7bdd4587205'), thumb: u('photo-1517457373958-b7bdd4587205', 900), alt: 'Panel discussion on stage', span: 'md:col-span-2' },
-  { src: u('photo-1511578314322-379afb476865'), thumb: u('photo-1511578314322-379afb476865', 600), alt: 'Exhibition space with visitors', span: '' },
-  { src: u('photo-1591115765373-5207764f72e7'), thumb: u('photo-1591115765373-5207764f72e7', 600), alt: 'Professional gathering in a conference hall', span: '' }
+  { src: u('photo-1505373877841-8d25f7d46678'), thumb: u('photo-1505373877841-8d25f7d46678', 600), alt: 'Keynote presentation in a lit auditorium', span: 'md:col-span-1 md:row-span-1' },
+  { src: u('photo-1515187029135-18ee286d815b'), thumb: u('photo-1515187029135-18ee286d815b', 600), alt: 'Professionals networking during an executive break', span: 'md:col-span-1 md:row-span-1' },
+  { src: u('photo-1517457373958-b7bdd4587205'), thumb: u('photo-1517457373958-b7bdd4587205', 900), alt: 'International panel discussion and audience Q&A on stage', span: 'md:col-span-2 md:row-span-1' },
+  { src: u('photo-1511578314322-379afb476865'), thumb: u('photo-1511578314322-379afb476865', 600), alt: 'Scientific and healthcare exhibition pavilion', span: 'md:col-span-1 md:row-span-1' },
+  { src: u('photo-1591115765373-5207764f72e7'), thumb: u('photo-1591115765373-5207764f72e7', 600), alt: 'Professional symposium gathering in a conference hall', span: 'md:col-span-1 md:row-span-1' },
+  { src: u('photo-1475721027785-f74eccf877e2'), thumb: u('photo-1475721027785-f74eccf877e2', 900), alt: 'Keynote speaker addressing illuminated congress plenary', span: 'md:col-span-2 md:row-span-2' },
+  { src: u('photo-1528605248644-14dd04022da1'), thumb: u('photo-1528605248644-14dd04022da1', 600), alt: 'Global delegates in an executive leadership roundtable', span: 'md:col-span-1 md:row-span-1' },
+  { src: u('photo-1587825140708-dfaf72ae4b04'), thumb: u('photo-1587825140708-dfaf72ae4b04', 600), alt: 'Clinical research poster presentation and peer review session', span: 'md:col-span-1 md:row-span-1' },
+  { src: u('photo-1576091160399-112ba8d25d1d'), thumb: u('photo-1576091160399-112ba8d25d1d', 900), alt: 'Biomedical technology demonstrations and hands-on clinical workshop', span: 'md:col-span-2 md:row-span-1' },
+  { src: u('photo-1531058020387-3be344556be6'), thumb: u('photo-1531058020387-3be344556be6', 600), alt: 'International summit registration and delegate VIP welcome', span: 'md:col-span-1 md:row-span-1' },
+  { src: u('photo-1511795409834-ef04bbd61622'), thumb: u('photo-1511795409834-ef04bbd61622', 600), alt: 'Evening gala awards dinner and international fellowship banquet', span: 'md:col-span-1 md:row-span-1' }
 ]
 
 export interface UpcomingEvent { id: string; name: string; date: string; location: string; category: Category; href: string }
