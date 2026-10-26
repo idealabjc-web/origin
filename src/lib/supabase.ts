@@ -13,9 +13,15 @@ import {
   type GalleryItem,
 } from '../data/content'
 
-const rawUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim()
+const rawUrl = (
+  import.meta.env.VITE_SUPABASE_URL ||
+  'https://khvvuffdfumuqffydlna.supabase.co'
+).trim()
 const supabaseUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '')
-const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim()
+const supabaseAnonKey = (
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtodnZ1ZmZkZnVtdXFmZnlkbG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2Mzc2MjgsImV4cCI6MjEwODIxMzYyOH0.ZV3PEtXtaRrsn2U_5sF4X7cAy7oYVr1Esx9mNfK3II0'
+).trim()
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
