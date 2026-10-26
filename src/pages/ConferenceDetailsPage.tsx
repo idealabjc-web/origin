@@ -318,17 +318,17 @@ export default function ConferenceDetailsPage({
 
         {/* 2. THEME SECTION */}
         {effectiveTheme && (
-          <section id="theme" className="scroll-mt-28 w-full rounded-3xl border border-amber-400/30 bg-gradient-to-br from-slate-900 via-navy-950 to-slate-900 p-6 sm:p-8 lg:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-            <div className="pointer-events-none absolute -left-20 -bottom-20 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
+          <section id="theme" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl" />
 
             <div className="relative">
-              <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl">
+              <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl">
                 Conference Theme
               </h2>
               <div className="mt-3 h-1.5 w-24 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
 
-              <div className="mt-6 rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-400/10 via-amber-500/5 to-transparent p-6 sm:p-8 lg:p-10 backdrop-blur-md">
-                <p className="font-display text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-amber-300 leading-snug tracking-tight">
+              <div className="mt-5 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-5 sm:p-6 backdrop-blur-sm">
+                <p className="font-display text-base sm:text-lg lg:text-xl font-semibold text-amber-300/90 leading-relaxed italic">
                   "{effectiveTheme}"
                 </p>
               </div>
