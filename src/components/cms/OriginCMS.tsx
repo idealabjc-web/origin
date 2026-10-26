@@ -117,6 +117,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
   const [isDraggingImage, setIsDraggingImage] = useState(false)
   const [imageProcessing, setImageProcessing] = useState(false)
   const confFileInputRef = useRef<HTMLInputElement>(null)
+  const middleImagesInputRef = useRef<HTMLInputElement>(null)
 
   // One-by-one session state
   const [newSessionInput, setNewSessionInput] = useState('')
@@ -134,6 +135,33 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
     const currentSessions = parseSessionsList(editingConference.sessions)
     const updated = currentSessions.filter((_, i) => i !== indexToRemove)
     setEditingConference({ ...editingConference, sessions: updated.join(', ') })
+  }
+
+  async function handleAddMiddleImage(file: File) {
+    if (!file || !file.type.startsWith('image/')) {
+      showToast('Please select a valid image file', 'error')
+      return
+    }
+    try {
+      setImageProcessing(true)
+      const processedUrl = await processImageFile(file)
+      if (editingConference) {
+        const currentImgs = Array.isArray(editingConference.images) ? editingConference.images : []
+        setEditingConference({ ...editingConference, images: [...currentImgs, processedUrl] })
+      }
+      showToast('Middle image added!')
+    } catch {
+      showToast('Failed to process image', 'error')
+    } finally {
+      setImageProcessing(false)
+    }
+  }
+
+  function handleRemoveMiddleImage(indexToRemove: number) {
+    if (!editingConference) return
+    const currentImgs = Array.isArray(editingConference.images) ? editingConference.images : []
+    const updated = currentImgs.filter((_, i) => i !== indexToRemove)
+    setEditingConference({ ...editingConference, images: updated })
   }
 
   async function handleDropConferenceImage(file: File) {
@@ -226,6 +254,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
       sessions: editingConference.sessions || '',
       description: editingConference.description || '',
       image: editingConference.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=70',
+      images: editingConference.images || [],
       href: editingConference.href || '#'
     })
     setLoading(false)
@@ -1122,15 +1151,15 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
               </button>
             </div>
 
-            <form onSubmit={handleSaveConference} className="mt-6 space-y-4">
+            <form onSubmit={handleSaveConference} className="mt-6 space-y-5">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Title *</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Conference Title *</label>
                 <input
                   type="text"
                   required
                   value={editingConference.title || ''}
                   onChange={(e) => setEditingConference({ ...editingConference, title: e.target.value })}
-                  placeholder="e.g. Global Health & Life Sciences Summit"
+                  placeholder="e.g. Global Nursing Science Congress 2027 (GNSC 2027)"
                   className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
                 />
               </div>
@@ -1150,30 +1179,50 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Date</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Conference Dates</label>
                   <input
                     type="text"
                     value={editingConference.date || ''}
                     onChange={(e) => setEditingConference({ ...editingConference, date: e.target.value })}
-                    placeholder="e.g. October 24-26, 2026"
+                    placeholder="e.g. October 24-26, 2026 (or 2027 Dates TBA)"
                     className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Location</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Venue &amp; Location</label>
                 <input
                   type="text"
                   value={editingConference.location || ''}
                   onChange={(e) => setEditingConference({ ...editingConference, location: e.target.value })}
-                  placeholder="e.g. Geneva, Switzerland / Hybrid"
+                  placeholder="e.g. London, UK / Hybrid"
                   className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
                 />
               </div>
 
+              {/* FLOW ITEM 1: ABOUT */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Theme</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">About the Conference *</label>
+                  <span className="text-[11px] text-gold/80 font-mono">Flow #1 on Conference Page</span>
+                </div>
+                <textarea
+                  rows={4}
+                  required
+                  value={editingConference.description || ''}
+                  onChange={(e) => setEditingConference({ ...editingConference, description: e.target.value })}
+                  placeholder="Comprehensive overview of the conference mandate, clinical/research scope, participant background, and goals..."
+                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
+                />
+              </div>
+
+              {/* FLOW ITEM 2: THEME */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Conference Theme</label>
+                  <span className="text-[11px] text-gold/80 font-mono">Flow #2 on Conference Page</span>
+                </div>
                 <input
                   type="text"
                   value={editingConference.theme || ''}
@@ -1183,14 +1232,70 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                 />
               </div>
 
+              {/* FLOW ITEM 3: MIDDLE IMAGES */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">
-                    Sessions {parseSessionsList(editingConference.sessions).length > 0 && (
+                    Middle Images (Conference Gallery) {Array.isArray(editingConference.images) && editingConference.images.length > 0 && (
+                      <span className="text-gold font-bold">({editingConference.images.length})</span>
+                    )}
+                  </label>
+                  <span className="text-[11px] text-gold/80 font-mono">Flow #3 on Conference Page</span>
+                </div>
+                <p className="text-[11px] text-white/50">
+                  Photos displayed in the middle section between Theme and Sessions.
+                </p>
+
+                {Array.isArray(editingConference.images) && editingConference.images.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3 pt-1">
+                    {editingConference.images.map((imgUrl, imgIdx) => (
+                      <div key={imgIdx} className="group relative aspect-video overflow-hidden rounded-xl border border-white/15 bg-navy-950">
+                        <img src={imgUrl} alt={`Middle photo ${imgIdx + 1}`} className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMiddleImage(imgIdx)}
+                          className="absolute top-1.5 right-1.5 rounded-full bg-rose-600/90 p-1 text-white opacity-80 hover:opacity-100 shadow transition"
+                          title="Remove image"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div
+                  onClick={() => middleImagesInputRef.current?.click()}
+                  className="cursor-pointer rounded-xl border border-dashed border-white/20 bg-white/5 p-4 text-center hover:border-gold hover:bg-white/10 transition flex items-center justify-center gap-2"
+                >
+                  <UploadCloud size={16} className="text-gold" />
+                  <span className="text-xs font-semibold text-white/80">
+                    {imageProcessing ? 'Processing image...' : 'Click to add middle image (or drop file)'}
+                  </span>
+                </div>
+
+                <input
+                  ref={middleImagesInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleAddMiddleImage(file)
+                    e.target.value = ''
+                  }}
+                />
+              </div>
+
+              {/* FLOW ITEM 4: SESSIONS */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">
+                    Conference Sessions {parseSessionsList(editingConference.sessions).length > 0 && (
                       <span className="text-gold font-bold">({parseSessionsList(editingConference.sessions).length})</span>
                     )}
                   </label>
-                  <span className="text-[11px] text-white/40">Add sessions one by one</span>
+                  <span className="text-[11px] text-gold/80 font-mono">Flow #4 on Conference Page</span>
                 </div>
 
                 <div className="flex gap-2">
@@ -1218,7 +1323,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                 </div>
 
                 {parseSessionsList(editingConference.sessions).length > 0 ? (
-                  <div className="flex flex-wrap gap-2 pt-1">
+                  <div className="flex flex-wrap gap-2 pt-1 max-h-40 overflow-y-auto no-scrollbar">
                     {parseSessionsList(editingConference.sessions).map((sess, idx) => (
                       <div
                         key={idx}
@@ -1246,20 +1351,10 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                 )}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Description</label>
-                <textarea
-                  rows={3}
-                  value={editingConference.description || ''}
-                  onChange={(e) => setEditingConference({ ...editingConference, description: e.target.value })}
-                  placeholder="Brief summary of the conference themes, keynote topics, and participants..."
-                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
-                />
-              </div>
-
+              {/* COVER IMAGE */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5">
-                  Cover Image
+                  Cover Image (Hero Banner &amp; Listing Card)
                 </label>
 
                 {editingConference.image ? (

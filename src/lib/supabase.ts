@@ -97,6 +97,11 @@ export async function getConferences(): Promise<Conference[]> {
       href: item.href || '#',
       theme: item.theme || '',
       sessions: item.sessions || '',
+      images: Array.isArray(item.images)
+        ? item.images
+        : (typeof item.images === 'string'
+          ? (() => { try { return JSON.parse(item.images) } catch { return [] } })()
+          : (defaultConferences.find(c => c.id === item.id)?.images || [])),
     }))
     setLocalItem(LOCAL_CONFS_KEY, list)
     return list
@@ -256,6 +261,7 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
     href: conf.href || '#',
     theme: conf.theme || '',
     sessions: conf.sessions || '',
+    images: conf.images || [],
   }
   if (idx >= 0) {
     current[idx] = { ...current[idx], ...newItem }
@@ -282,15 +288,17 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
     }
     if (conf.theme !== undefined) payload.theme = conf.theme
     if (conf.sessions !== undefined) payload.sessions = conf.sessions
+    if (conf.images !== undefined) payload.images = conf.images
 
     let { error } = await supabase
       .from('conferences')
       .upsert(payload, { onConflict: 'id' })
 
-    // If Supabase table does not yet have theme or sessions columns, gracefully fallback without them
-    if (error && (error.message.includes('theme') || error.message.includes('sessions'))) {
+    // If Supabase table does not yet have theme, sessions, or images columns, gracefully fallback without them
+    if (error && (error.message.includes('theme') || error.message.includes('sessions') || error.message.includes('images'))) {
       delete payload.theme
       delete payload.sessions
+      delete payload.images
       const retry = await supabase.from('conferences').upsert(payload, { onConflict: 'id' })
       error = retry.error
     }

@@ -56,6 +56,7 @@ export interface Conference {
   href: string
   theme?: string
   sessions?: string
+  images?: string[]
 }
 export const conferences: Conference[] = [
   {
@@ -65,9 +66,14 @@ export const conferences: Conference[] = [
     date: '2027 (Dates to be announced)',
     location: 'London, UK / Hybrid',
     theme: 'Advancing Global Healthcare & Nursing Practice',
-    sessions: 'Nursing Education, Clinical Practice, Pediatrics, Midwifery, Oncology',
+    sessions: 'Nursing Education & Pedagogy, Clinical Practice & Patient Safety, Pediatrics & Neonatal ICU, Midwifery & Women\'s Health, Oncology & Palliative Care, Disaster & Emergency Triage, Healthcare Informatics & Tele-Nursing',
     description: 'An international integrated congress anticipating participants from across the globe with thought-provoking Keynote lectures, Oral and Poster presentations, and clinical workshops across Nursing Education, Clinical Practice, Pediatrics, Midwifery, Oncology, and Emergency Care.',
     image: u('photo-1576091160399-112ba8d25d1d', 900),
+    images: [
+      u('photo-1587825140708-dfaf72ae4b04', 800),
+      u('photo-1576091160399-112ba8d25d1d', 800),
+      u('photo-1515187029135-18ee286d815b', 800)
+    ],
     href: '#conferences'
   },
   {
@@ -77,9 +83,14 @@ export const conferences: Conference[] = [
     date: '2027 (Dates to be announced)',
     location: 'Geneva, Switzerland / Hybrid',
     theme: 'Transformative Entrepreneurship & Agile Leadership',
-    sessions: 'Disruptive Innovation, Venture Capital, Enterprise AI, Scale-Up Execution',
+    sessions: 'Disruptive Innovation & Business Models, Venture Capital & Angel Financing, Enterprise AI & Automation, Agile Strategy & Scale-Up Execution, Sustainable Corporate Governance, Cross-Border Market Expansion',
     description: 'A global congress introducing the transformative power of entrepreneurship, startup accessibility, lean startup principles, and hands-on rapid prototyping to empower emerging leaders in marketing, finance, and management.',
     image: u('photo-1556761175-5973dc0f32e7', 900),
+    images: [
+      u('photo-1517457373958-b7bdd4587205', 800),
+      u('photo-1528605248644-14dd04022da1', 800),
+      u('photo-1540575467063-178a50c2df87', 800)
+    ],
     href: '#conferences'
   },
   {
@@ -89,9 +100,14 @@ export const conferences: Conference[] = [
     date: '2027 (Dates to be announced)',
     location: 'Paris, France / Hybrid',
     theme: 'Cutting-Edge Discoveries in Modern Dentistry & Prosthodontics',
-    sessions: 'Digital Dentistry, Intraoral CAD/CAM, Guided Implantology, Aesthetic Lasers',
+    sessions: 'Digital Dentistry & 3D Scanning, Intraoral CAD/CAM Restorations, Guided Implantology, Aesthetic Dental Lasers, Pediatric Dentistry, Periodontics & Tissue Regeneration, Maxillofacial Surgery Advances',
     description: 'A phenomenal international occasion featuring exciting speakers, hands-on clinical sessions, and cutting-edge discoveries across Prosthodontics, Digital Dentistry, Oral Surgery, Laser & Aesthetic Dentistry, and Implantology.',
     image: u('photo-1629909613654-28e377c37b09', 900),
+    images: [
+      u('photo-1629909613654-28e377c37b09', 800),
+      u('photo-1587825140708-dfaf72ae4b04', 800),
+      u('photo-1505373877841-8d25f7d46678', 800)
+    ],
     href: '#conferences'
   }
 ]
