@@ -73,6 +73,16 @@ function processImageFile(file: File): Promise<string> {
   })
 }
 
+function parseSessionsList(val: string[] | string | undefined | null): string[] {
+  if (!val) return []
+  if (Array.isArray(val)) return val
+  try {
+    const parsed = JSON.parse(val)
+    if (Array.isArray(parsed)) return parsed
+  } catch {}
+  return val.split(/[,;\n•]+/).map((s) => s.trim()).filter(Boolean)
+}
+
 export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState<Tab>('conferences')
   const [loading, setLoading] = useState(false)
@@ -107,6 +117,24 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
   const [isDraggingImage, setIsDraggingImage] = useState(false)
   const [imageProcessing, setImageProcessing] = useState(false)
   const confFileInputRef = useRef<HTMLInputElement>(null)
+
+  // One-by-one session state
+  const [newSessionInput, setNewSessionInput] = useState('')
+
+  function handleAddSession() {
+    if (!newSessionInput.trim() || !editingConference) return
+    const currentSessions = parseSessionsList(editingConference.sessions)
+    const updated = [...currentSessions, newSessionInput.trim()]
+    setEditingConference({ ...editingConference, sessions: updated.join(', ') })
+    setNewSessionInput('')
+  }
+
+  function handleRemoveSession(indexToRemove: number) {
+    if (!editingConference) return
+    const currentSessions = parseSessionsList(editingConference.sessions)
+    const updated = currentSessions.filter((_, i) => i !== indexToRemove)
+    setEditingConference({ ...editingConference, sessions: updated.join(', ') })
+  }
 
   async function handleDropConferenceImage(file: File) {
     if (!file || !file.type.startsWith('image/')) {
@@ -1155,15 +1183,67 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Sessions</label>
-                <input
-                  type="text"
-                  value={editingConference.sessions || ''}
-                  onChange={(e) => setEditingConference({ ...editingConference, sessions: e.target.value })}
-                  placeholder="e.g. Nursing Education, Clinical Practice, Pediatrics, Midwifery, Oncology"
-                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
-                />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">
+                    Sessions {parseSessionsList(editingConference.sessions).length > 0 && (
+                      <span className="text-gold font-bold">({parseSessionsList(editingConference.sessions).length})</span>
+                    )}
+                  </label>
+                  <span className="text-[11px] text-white/40">Add sessions one by one</span>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSessionInput}
+                    onChange={(e) => setNewSessionInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleAddSession()
+                      }
+                    }}
+                    placeholder="e.g. Clinical Nursing Practice & Patient Care"
+                    className="flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSession}
+                    disabled={!newSessionInput.trim()}
+                    className="flex items-center gap-1.5 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-navy-950 hover:bg-gold-light transition shadow-md disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                  >
+                    <Plus size={15} /> Add Session
+                  </button>
+                </div>
+
+                {parseSessionsList(editingConference.sessions).length > 0 ? (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {parseSessionsList(editingConference.sessions).map((sess, idx) => (
+                      <div
+                        key={idx}
+                        className="group flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs text-white backdrop-blur-sm hover:border-gold/50 transition"
+                      >
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gold/20 text-[10px] font-bold text-gold font-mono">
+                          {idx + 1}
+                        </span>
+                        <span className="font-medium">{sess}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSession(idx)}
+                          className="ml-1 rounded-md p-1 text-white/40 hover:bg-rose-500/20 hover:text-rose-300 transition"
+                          title="Remove session"
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-3 text-center text-xs text-white/40">
+                    No sessions added yet. Enter a session title above and click <strong className="text-white/60">Add Session</strong> or press <strong className="text-white/60">Enter</strong>.
+                  </div>
+                )}
               </div>
 
               <div>
