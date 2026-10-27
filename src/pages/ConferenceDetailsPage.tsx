@@ -18,12 +18,34 @@ interface ConferenceDetailsPageProps {
 
 function parseSessionsList(val: string[] | string | undefined | null): string[] {
   if (!val) return []
-  if (Array.isArray(val)) return val
-  try {
-    const parsed = JSON.parse(val)
-    if (Array.isArray(parsed)) return parsed
-  } catch {}
-  return val.split(/[,;\n•]+/).map((s) => s.trim()).filter(Boolean)
+  if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean)
+  if (typeof val === 'string') {
+    const trimmed = val.trim()
+    if (!trimmed) return []
+    // 1. Check if it's a JSON array string e.g. ["Session 1, with comma", "Session 2"]
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (Array.isArray(parsed)) {
+          return parsed.map((s) => String(s).trim()).filter(Boolean)
+        }
+      } catch {}
+    }
+    // 2. Multiline string
+    if (trimmed.includes('\n')) {
+      return trimmed
+        .split(/\r?\n+/)
+        .map((s) => s.replace(/^[•\-\*]\s*/, '').trim())
+        .filter(Boolean)
+    }
+    // 3. Double-pipe || separated
+    if (trimmed.includes('||')) {
+      return trimmed.split('||').map((s) => s.trim()).filter(Boolean)
+    }
+    // 4. Legacy comma-separated fallback for default conferences
+    return trimmed.split(/[,;\n•]+/).map((s) => s.trim()).filter(Boolean)
+  }
+  return []
 }
 
 export default function ConferenceDetailsPage({

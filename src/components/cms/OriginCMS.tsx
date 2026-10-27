@@ -75,12 +75,34 @@ function processImageFile(file: File): Promise<string> {
 
 function parseSessionsList(val: string[] | string | undefined | null): string[] {
   if (!val) return []
-  if (Array.isArray(val)) return val
-  try {
-    const parsed = JSON.parse(val)
-    if (Array.isArray(parsed)) return parsed
-  } catch {}
-  return val.split(/[,;\n•]+/).map((s) => s.trim()).filter(Boolean)
+  if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean)
+  if (typeof val === 'string') {
+    const trimmed = val.trim()
+    if (!trimmed) return []
+    // 1. Check if it's a JSON array string e.g. ["Session 1, with comma", "Session 2"]
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (Array.isArray(parsed)) {
+          return parsed.map((s) => String(s).trim()).filter(Boolean)
+        }
+      } catch {}
+    }
+    // 2. Multiline string
+    if (trimmed.includes('\n')) {
+      return trimmed
+        .split(/\r?\n+/)
+        .map((s) => s.replace(/^[•\-\*]\s*/, '').trim())
+        .filter(Boolean)
+    }
+    // 3. Double-pipe || separated
+    if (trimmed.includes('||')) {
+      return trimmed.split('||').map((s) => s.trim()).filter(Boolean)
+    }
+    // 4. Legacy comma-separated fallback for default conferences
+    return trimmed.split(/[,;\n•]+/).map((s) => s.trim()).filter(Boolean)
+  }
+  return []
 }
 
 export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -126,7 +148,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
     if (!newSessionInput.trim() || !editingConference) return
     const currentSessions = parseSessionsList(editingConference.sessions)
     const updated = [...currentSessions, newSessionInput.trim()]
-    setEditingConference({ ...editingConference, sessions: updated.join(', ') })
+    setEditingConference({ ...editingConference, sessions: JSON.stringify(updated) })
     setNewSessionInput('')
   }
 
@@ -134,7 +156,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
     if (!editingConference) return
     const currentSessions = parseSessionsList(editingConference.sessions)
     const updated = currentSessions.filter((_, i) => i !== indexToRemove)
-    setEditingConference({ ...editingConference, sessions: updated.join(', ') })
+    setEditingConference({ ...editingConference, sessions: JSON.stringify(updated) })
   }
 
   async function handleAddMiddleImage(file: File) {
@@ -246,13 +268,14 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
     const confId = editingConference.id || 'c_' + Date.now().toString(36)
 
     // Automatically incorporate any pending session typed into the input
-    let sessionsStr = editingConference.sessions || ''
+    let currentSessions = parseSessionsList(editingConference.sessions)
     if (newSessionInput.trim()) {
-      const currentSessions = parseSessionsList(sessionsStr)
-      if (!currentSessions.includes(newSessionInput.trim())) {
-        sessionsStr = [...currentSessions, newSessionInput.trim()].join(', ')
+      const pending = newSessionInput.trim()
+      if (!currentSessions.includes(pending)) {
+        currentSessions = [...currentSessions, pending]
       }
     }
+    const finalSessionsJson = JSON.stringify(currentSessions)
 
     const res = await upsertConference({
       id: confId,
@@ -261,7 +284,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
       date: editingConference.date || 'Date to be announced',
       location: editingConference.location || 'Virtual / Hybrid',
       theme: (editingConference.theme || '').trim(),
-      sessions: sessionsStr,
+      sessions: finalSessionsJson,
       description: editingConference.description || '',
       image: editingConference.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=70',
       images: editingConference.images || [],
@@ -728,7 +751,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                           <h3 className="font-display text-base font-semibold line-clamp-1">{c.title}</h3>
                           <p className="text-xs text-white/50 mt-1">{c.date} • {c.location}</p>
                           {displayTheme && <p className="text-xs text-gold/90 mt-1 font-medium line-clamp-1"><span className="text-white/40 uppercase text-[10px] font-bold">Theme:</span> {displayTheme}</p>}
-                          {displaySessions && <p className="text-xs text-white/60 mt-0.5 line-clamp-1"><span className="text-white/40 uppercase text-[10px] font-bold">Sessions:</span> {displaySessions}</p>}
+                          {displaySessions && <p className="text-xs text-white/60 mt-0.5 line-clamp-1"><span className="text-white/40 uppercase text-[10px] font-bold">Sessions:</span> {parseSessionsList(displaySessions).join(' • ')}</p>}
                           <p className="text-xs text-white/70 mt-2 line-clamp-2">{displayDesc}</p>
                         </div>
 

@@ -81,7 +81,7 @@ export function unpackConferenceData(desc: string | undefined | null) {
     return {
       description: cleanDesc,
       theme: typeof meta.theme === 'string' ? meta.theme : '',
-      sessions: typeof meta.sessions === 'string' ? meta.sessions : (Array.isArray(meta.sessions) ? meta.sessions.join(', ') : ''),
+      sessions: typeof meta.sessions === 'string' ? meta.sessions : (Array.isArray(meta.sessions) ? JSON.stringify(meta.sessions) : ''),
       images: Array.isArray(meta.images) ? (meta.images as string[]) : ([] as string[])
     }
   } catch {
