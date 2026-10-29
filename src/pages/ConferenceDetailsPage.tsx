@@ -6,56 +6,28 @@ import {
   Layers, Send, X, Maximize2,
   BookOpen, Quote, ArrowUpRight, Sparkles
 } from 'lucide-react'
-import { type Conference } from '../data/content'
-import { submitEventRegistration, getConferences, unpackConferenceData } from '../lib/supabase'
+import { getConferenceTopic, parseSessionsList, type Conference } from '../data/content'
+import { submitEventRegistration, getConferences, getCachedConferences, unpackConferenceData } from '../lib/supabase'
 
 interface ConferenceDetailsPageProps {
   conference: Conference
   onBack: () => void
   onHome?: () => void
   onNavigateToConference?: (id: string) => void
-}
-
-function parseSessionsList(val: string[] | string | undefined | null): string[] {
-  if (!val) return []
-  if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean)
-  if (typeof val === 'string') {
-    const trimmed = val.trim()
-    if (!trimmed) return []
-    // 1. Check if it's a JSON array string e.g. ["Session 1, with comma", "Session 2"]
-    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-      try {
-        const parsed = JSON.parse(trimmed)
-        if (Array.isArray(parsed)) {
-          return parsed.map((s) => String(s).trim()).filter(Boolean)
-        }
-      } catch {}
-    }
-    // 2. Multiline string
-    if (trimmed.includes('\n')) {
-      return trimmed
-        .split(/\r?\n+/)
-        .map((s) => s.replace(/^[•\-\*]\s*/, '').trim())
-        .filter(Boolean)
-    }
-    // 3. Double-pipe || separated
-    if (trimmed.includes('||')) {
-      return trimmed.split('||').map((s) => s.trim()).filter(Boolean)
-    }
-    // 4. Legacy comma-separated fallback for default conferences
-    return trimmed.split(/[,;\n•]+/).map((s) => s.trim()).filter(Boolean)
-  }
-  return []
+  onNavigate?: (path: string) => void
 }
 
 export default function ConferenceDetailsPage({
   conference,
   onBack,
   onHome,
-  onNavigateToConference
+  onNavigateToConference,
+  onNavigate
 }: ConferenceDetailsPageProps) {
   const [copied, setCopied] = useState(false)
-  const [otherConferences, setOtherConferences] = useState<Conference[]>([])
+  const [otherConferences, setOtherConferences] = useState<Conference[]>(() =>
+    getCachedConferences().filter((c) => c.id !== conference.id)
+  )
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   // Registration form states
@@ -224,7 +196,7 @@ export default function ConferenceDetailsPage({
                 <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-ping" />
                 <span className="uppercase text-[11px] font-mono">OFFICIAL WORLD CONGRESS</span>
                 <span className="text-white/40">•</span>
-                <span className="text-white/90">{conference.category}</span>
+                <span className="text-white/90">{getConferenceTopic(conference)}</span>
               </div>
 
               {/* Conference Title */}
@@ -564,6 +536,43 @@ export default function ConferenceDetailsPage({
                   <Send size={15} />
                   <span>{submitting ? 'Confirming Registration...' : 'Confirm Delegate Registration'}</span>
                 </button>
+
+                <p className="pt-2 text-xs text-slate-400 leading-relaxed">
+                  By completing your registration, you agree to our{' '}
+                  <a
+                    href="/terms"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      if (onNavigate) onNavigate('/terms')
+                    }}
+                    className="text-amber-300 hover:underline font-medium"
+                  >
+                    Terms &amp; Conditions
+                  </a>
+                  ,{' '}
+                  <a
+                    href="/privacy"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      if (onNavigate) onNavigate('/privacy')
+                    }}
+                    className="text-amber-300 hover:underline font-medium"
+                  >
+                    Privacy Policy
+                  </a>
+                  , and{' '}
+                  <a
+                    href="/refund-policy"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      if (onNavigate) onNavigate('/refund-policy')
+                    }}
+                    className="text-amber-300 hover:underline font-medium"
+                  >
+                    Refund &amp; Cancellation Policy
+                  </a>
+                  .
+                </p>
               </form>
             </div>
           </div>
@@ -614,7 +623,7 @@ export default function ConferenceDetailsPage({
                 >
                   <div>
                     <span className="rounded-full bg-amber-400/20 px-3 py-1 text-[11px] font-bold text-amber-300">
-                      {c.category}
+                      {getConferenceTopic(c)}
                     </span>
                     <h4 className="mt-4 font-display text-xl font-bold text-white group-hover:text-amber-300 transition leading-snug">
                       {c.title}

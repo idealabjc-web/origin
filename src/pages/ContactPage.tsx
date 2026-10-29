@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { submitContactMessage, isSupabaseConfigured } from '../lib/supabase'
 
-export default function ContactPage() {
+export default function ContactPage({ onNavigate }: { onNavigate?: (path: string) => void }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')
@@ -34,8 +34,8 @@ export default function ContactPage() {
       a: 'Virtual delegates receive dedicated encrypted portal access 7 days prior to the summit, featuring multi-angle 4K ballroom streams, real-time audio Q&A, and access to recorded sessions for 90 days.'
     },
     {
-      q: 'What is the refund or ticket transfer policy?',
-      a: 'Delegate registrations can be transferred to a colleague from the same institution at any time free of charge. Full refunds are available up to 45 days prior to the congress opening date.'
+      q: 'What is the refund, cancellation, or participant substitution policy?',
+      a: 'Speaker cancellations received 90+ days before the conference qualify for a 75% refund; 60–89 days qualify for a 50% refund; fewer than 60 days are non-refundable. Alternatively, registration fees may be carried over as credit toward a future event, or a substitute Speaker/Delegate may attend with prior written approval from the conference manager.'
     }
   ]
 
@@ -226,8 +226,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-[11px] uppercase tracking-wider text-white/50 font-bold">General Inquiries</p>
-                    <a href="mailto:info@your-domain.com" className="font-semibold hover:text-gold transition">
-                      info@your-domain.com
+                    <a href="mailto:contact@originconferences.com" className="font-semibold hover:text-gold transition">
+                      contact@originconferences.com
                     </a>
                   </div>
                 </div>
@@ -266,11 +266,43 @@ export default function ContactPage() {
 
             <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
               <h4 className="font-display font-bold text-sm text-navy-950 flex items-center gap-2">
-                <ShieldCheck className="text-emerald-500" size={18} /> Official Guarantee
+                <ShieldCheck className="text-emerald-500" size={18} /> Official Policies &amp; Governance
               </h4>
               <p className="mt-2 text-xs text-charcoal/70 leading-relaxed">
-                All communications and abstract submissions are handled in strict academic confidentiality according to GDPR and UK Data Protection legislation.
+                All registrations, personal data, and refund requests are governed by our official conference policies.
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <a
+                  href="/terms"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (onNavigate) onNavigate('/terms')
+                  }}
+                  className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-navy-950 hover:bg-gold/20 transition"
+                >
+                  Terms &amp; Conditions
+                </a>
+                <a
+                  href="/privacy"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (onNavigate) onNavigate('/privacy')
+                  }}
+                  className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-navy-950 hover:bg-gold/20 transition"
+                >
+                  Privacy Policy
+                </a>
+                <a
+                  href="/refund-policy"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (onNavigate) onNavigate('/refund-policy')
+                  }}
+                  className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-navy-950 hover:bg-gold/20 transition"
+                >
+                  Refund Policy
+                </a>
+              </div>
             </div>
           </div>
         </div>

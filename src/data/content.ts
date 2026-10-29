@@ -5,13 +5,13 @@ export const site = {
   name: 'ORIGIN Conferences',
   // Leave empty until a backend exists. Set to a form/API URL (accepts POST JSON {email}).
   newsletterEndpoint: '',
-  contact: { email: 'info@your-domain.com', phone: '+00 000 000 0000', address: 'Your office address, City, Country' },
+  contact: { email: 'contact@originconferences.com', phone: '+00 000 000 0000', address: 'Your office address, City, Country' },
   social: [
     { label: 'LinkedIn', href: '#' }, { label: 'X / Twitter', href: '#' },
     { label: 'Facebook', href: '#' }, { label: 'YouTube', href: '#' }
   ],
   ctaLinks: { speaker: '#contact', community: '#newsletter', register: '#events', conferences: '#conferences' },
-  legal: { privacy: '#', terms: '#' }
+  legal: { privacy: '/privacy', terms: '/terms', refund: '/refund-policy' }
 }
 
 export const navItems = [
@@ -42,8 +42,109 @@ export const stats = [
   { value: 40, suffix: '+', label: 'Countries Reached' }, { value: 500, suffix: '+', label: 'Expert Speakers' }
 ]
 
-export type Category = 'Healthcare & Life Sciences' | 'Technology & Innovation' | 'Business & Leadership' | 'Research & Academia'
+export type Category = string
 export const categories: Category[] = ['Healthcare & Life Sciences', 'Technology & Innovation', 'Business & Leadership', 'Research & Academia']
+
+const LEGACY_DEFAULT_CATEGORIES = new Set([
+  'Healthcare & Life Sciences',
+  'Technology & Innovation',
+  'Business & Leadership',
+  'Research & Academia',
+])
+
+export function getConferenceTopic(item: { title?: string; name?: string; category?: string }): string {
+  const cat = (item.category || '').trim()
+  if (cat && !LEGACY_DEFAULT_CATEGORIES.has(cat)) {
+    return cat
+  }
+
+  const rawTitle = (item.title || item.name || '').trim()
+  if (!rawTitle) return cat || 'General Congress'
+
+  let cleaned = rawTitle
+    .replace(/\([^)]*\)/g, '')
+    .replace(/\b20\d{2}\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  const prefixMatch = cleaned.match(
+    /(?:congress|conference|summit|symposium|forum|colloquium|convention|meeting|meet|workshop|expo)\s+(?:on|in|for|of)\s+(.+)$/i
+  )
+  if (prefixMatch && prefixMatch[1]) {
+    cleaned = prefixMatch[1].trim()
+  } else {
+    cleaned = cleaned
+      .replace(/^(?:the\s+)?(?:\d+(?:st|nd|rd|th)\s+)?(?:world|international|global|annual|european|premier|integrated|\s)+/i, '')
+      .replace(/\s+(?:congress|conference|summit|symposium|forum|colloquium|convention|meeting|meet|workshop|expo)$/i, '')
+      .trim()
+  }
+
+  // Clean up leading "Advanced " if long
+  if (cleaned.length > 28) {
+    cleaned = cleaned.replace(/^Advanced\s+/i, '').trim()
+  }
+
+  if (cleaned.length > 32) {
+    const firstComma = cleaned.split(',')[0]?.trim()
+    if (firstComma && firstComma.length >= 8 && firstComma.length <= 32) {
+      cleaned = firstComma
+    } else {
+      const splitAnd = cleaned.split(/\s+(?:and|&)\s+/i)
+      if (splitAnd[0] && splitAnd[0].trim().length >= 6) {
+        cleaned = splitAnd[0].trim()
+      }
+    }
+  }
+
+  return cleaned || cat || 'General Congress'
+}
+
+export function parseSessionsList(val: string[] | string | undefined | null): string[] {
+  if (!val) return []
+  if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean)
+  if (typeof val === 'string') {
+    const trimmed = val.trim()
+    if (!trimmed) return []
+    // 1. JSON array string e.g. ["Session 1, with comma", "Session 2"]
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        if (Array.isArray(parsed)) {
+          return parsed.map((s) => String(s).trim()).filter(Boolean)
+        }
+      } catch {}
+    }
+    // 2. Double-pipe || separated
+    if (trimmed.includes('||')) {
+      return trimmed.split('||').map((s) => s.trim()).filter(Boolean)
+    }
+    // 3. Multiline string (one session per line)
+    if (trimmed.includes('\n')) {
+      return trimmed
+        .split(/\r?\n+/)
+        .map((s) => s.replace(/^[•\-\*]\s*/, '').trim())
+        .filter(Boolean)
+    }
+    // 4. Legacy comma-separated string: smartly keep "X, Y and Z" together as one session
+    const parts = trimmed.split(',').map((s) => s.trim()).filter(Boolean)
+    if (parts.length <= 1) return parts
+    const merged: string[] = []
+    for (let i = 0; i < parts.length; i++) {
+      const curr = parts[i]
+      const next = parts[i + 1]
+      const currHasAnd = /\b(?:and|&)\b/i.test(curr)
+      const nextHasAnd = next ? /\b(?:and|&)\b/i.test(next) : false
+      if (!currHasAnd && next && nextHasAnd && curr.split(/\s+/).length <= 3) {
+        merged.push(`${curr}, ${next}`)
+        i++
+      } else {
+        merged.push(curr)
+      }
+    }
+    return merged
+  }
+  return []
+}
 
 export interface Conference {
   id: string
@@ -58,59 +159,7 @@ export interface Conference {
   sessions?: string
   images?: string[]
 }
-export const conferences: Conference[] = [
-  {
-    id: 'gnsc-2027',
-    title: 'Global Nursing Science Congress 2027 (GNSC 2027)',
-    category: 'Healthcare & Life Sciences',
-    date: '2027 (Dates to be announced)',
-    location: 'London, UK / Hybrid',
-    theme: 'Advancing Global Healthcare & Nursing Practice',
-    sessions: 'Nursing Education & Pedagogy, Clinical Practice & Patient Safety, Pediatrics & Neonatal ICU, Midwifery & Women\'s Health, Oncology & Palliative Care, Disaster & Emergency Triage, Healthcare Informatics & Tele-Nursing',
-    description: 'An international integrated congress anticipating participants from across the globe with thought-provoking Keynote lectures, Oral and Poster presentations, and clinical workshops across Nursing Education, Clinical Practice, Pediatrics, Midwifery, Oncology, and Emergency Care.',
-    image: u('photo-1576091160399-112ba8d25d1d', 900),
-    images: [
-      u('photo-1587825140708-dfaf72ae4b04', 800),
-      u('photo-1576091160399-112ba8d25d1d', 800),
-      u('photo-1515187029135-18ee286d815b', 800)
-    ],
-    href: '#conferences'
-  },
-  {
-    id: 'gwbel-2027',
-    title: 'International Conference on Global Business & Entrepreneurial Leadership (GWBEL 2027)',
-    category: 'Business & Leadership',
-    date: '2027 (Dates to be announced)',
-    location: 'Geneva, Switzerland / Hybrid',
-    theme: 'Transformative Entrepreneurship & Agile Leadership',
-    sessions: 'Disruptive Innovation & Business Models, Venture Capital & Angel Financing, Enterprise AI & Automation, Agile Strategy & Scale-Up Execution, Sustainable Corporate Governance, Cross-Border Market Expansion',
-    description: 'A global congress introducing the transformative power of entrepreneurship, startup accessibility, lean startup principles, and hands-on rapid prototyping to empower emerging leaders in marketing, finance, and management.',
-    image: u('photo-1556761175-5973dc0f32e7', 900),
-    images: [
-      u('photo-1517457373958-b7bdd4587205', 800),
-      u('photo-1528605248644-14dd04022da1', 800),
-      u('photo-1540575467063-178a50c2df87', 800)
-    ],
-    href: '#conferences'
-  },
-  {
-    id: 'wedc-2027',
-    title: 'World Euro Dental Congress 2027 (WEDC 2027)',
-    category: 'Healthcare & Life Sciences',
-    date: '2027 (Dates to be announced)',
-    location: 'Paris, France / Hybrid',
-    theme: 'Cutting-Edge Discoveries in Modern Dentistry & Prosthodontics',
-    sessions: 'Digital Dentistry & 3D Scanning, Intraoral CAD/CAM Restorations, Guided Implantology, Aesthetic Dental Lasers, Pediatric Dentistry, Periodontics & Tissue Regeneration, Maxillofacial Surgery Advances',
-    description: 'A phenomenal international occasion featuring exciting speakers, hands-on clinical sessions, and cutting-edge discoveries across Prosthodontics, Digital Dentistry, Oral Surgery, Laser & Aesthetic Dentistry, and Implantology.',
-    image: u('photo-1629909613654-28e377c37b09', 900),
-    images: [
-      u('photo-1629909613654-28e377c37b09', 800),
-      u('photo-1587825140708-dfaf72ae4b04', 800),
-      u('photo-1505373877841-8d25f7d46678', 800)
-    ],
-    href: '#conferences'
-  }
-]
+export const conferences: Conference[] = []
 
 export interface Testimonial { id: string; name: string; role: string; event: string; quote: string; thumbnail: string; video: string }
 export const testimonials: Testimonial[] = [
@@ -146,11 +195,7 @@ export const gallery: GalleryItem[] = [
 ]
 
 export interface UpcomingEvent { id: string; name: string; date: string; location: string; category: Category; href: string }
-export const events: UpcomingEvent[] = [
-  { id: 'ev-gnsc-2027', name: 'Global Nursing Science Congress 2027', date: '2027 • Dates TBA', location: 'London, UK / Hybrid', category: 'Healthcare & Life Sciences', href: '#conferences' },
-  { id: 'ev-gwbel-2027', name: 'Global Business & Entrepreneurial Leadership', date: '2027 • Dates TBA', location: 'Geneva, Switzerland / Hybrid', category: 'Business & Leadership', href: '#conferences' },
-  { id: 'ev-wedc-2027', name: 'World Euro Dental Congress 2027', date: '2027 • Dates TBA', location: 'Paris, France / Hybrid', category: 'Healthcare & Life Sciences', href: '#conferences' }
-]
+export const events: UpcomingEvent[] = []
 
 export interface Speaker {
   id: string

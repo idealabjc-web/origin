@@ -20,8 +20,9 @@ import SpeakersPage from './pages/SpeakersPage'
 import ServicesPage from './pages/ServicesPage'
 import TestimonialsPage from './pages/TestimonialsPage'
 import ContactPage from './pages/ContactPage'
-import { conferences as fallbackConferences, type Conference } from './data/content'
-import { getConferences } from './lib/supabase'
+import LegalPage, { type PolicySectionId } from './pages/LegalPage'
+import { type Conference } from './data/content'
+import { getConferences, getCachedConferences } from './lib/supabase'
 
 type AppRoute =
   | { type: 'home'; path: '/' }
@@ -32,6 +33,7 @@ type AppRoute =
   | { type: 'services'; path: '/services' }
   | { type: 'testimonials'; path: '/testimonials' }
   | { type: 'contact'; path: '/contact' }
+  | { type: 'legal'; section: PolicySectionId; path: string }
 
 function parseCurrentRoute(): AppRoute {
   if (typeof window === 'undefined') return { type: 'home', path: '/' }
@@ -58,6 +60,10 @@ function parseCurrentRoute(): AppRoute {
   if (matches('/services')) return { type: 'services', path: '/services' }
   if (matches('/testimonials')) return { type: 'testimonials', path: '/testimonials' }
   if (matches('/contact')) return { type: 'contact', path: '/contact' }
+  if (matches('/terms')) return { type: 'legal', section: 'terms', path: '/terms' }
+  if (matches('/privacy')) return { type: 'legal', section: 'privacy', path: '/privacy' }
+  if (matches('/refund-policy') || matches('/refund')) return { type: 'legal', section: 'refund', path: '/refund-policy' }
+  if (matches('/policies') || matches('/legal')) return { type: 'legal', section: 'all', path: '/policies' }
 
   return { type: 'home', path: '/' }
 }
@@ -65,7 +71,7 @@ function parseCurrentRoute(): AppRoute {
 export default function App() {
   const [cmsOpen, setCmsOpen] = useState(false)
   const [route, setRoute] = useState<AppRoute>(() => parseCurrentRoute())
-  const [conferenceList, setConferenceList] = useState<Conference[]>(fallbackConferences)
+  const [conferenceList, setConferenceList] = useState<Conference[]>(() => getCachedConferences())
 
   function checkAdminRoute() {
     const isSecretPath = window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin')
@@ -105,6 +111,10 @@ export default function App() {
 
   useEffect(() => {
     function loadConferences() {
+      const cached = getCachedConferences()
+      if (cached.length > 0) {
+        setConferenceList(cached)
+      }
       getConferences().then((data) => {
         if (Array.isArray(data)) {
           setConferenceList(data)
@@ -144,8 +154,8 @@ export default function App() {
   const selectedConference =
     route.type === 'conference-detail'
       ? conferenceList.find((c) => c.id.toLowerCase() === route.id.toLowerCase()) ||
-        fallbackConferences.find((c) => c.id.toLowerCase() === route.id.toLowerCase()) ||
-        fallbackConferences[0]
+        conferenceList[0] ||
+        null
       : null
 
   return (
@@ -158,8 +168,9 @@ export default function App() {
             onBack={() => navigateTo('/conferences')}
             onHome={navigateToHome}
             onNavigateToConference={navigateToConference}
+            onNavigate={navigateTo}
           />
-          <Footer />
+          <Footer onNavigate={navigateTo} />
         </>
       ) : (
         /* 2. Top Header Navigation (Consistent across all pages) */
@@ -188,7 +199,11 @@ export default function App() {
           )}
 
           {route.type === 'contact' && (
-            <ContactPage />
+            <ContactPage onNavigate={navigateTo} />
+          )}
+
+          {route.type === 'legal' && (
+            <LegalPage activeSection={route.section} onNavigate={navigateTo} />
           )}
 
           {/* 4. Full Homepage (Default View) */}
@@ -212,7 +227,7 @@ export default function App() {
             </main>
           )}
 
-          <Footer />
+          <Footer onNavigate={navigateTo} />
         </>
       )}
 

@@ -16,6 +16,7 @@ import {
 } from '../../lib/supabase'
 import {
   categories,
+  parseSessionsList,
   type Category,
   type Conference,
   type UpcomingEvent,
@@ -41,7 +42,7 @@ function processImageFile(file: File): Promise<string> {
     reader.onload = (e) => {
       const img = new Image()
       img.onload = () => {
-        const maxDim = 1920
+        const maxDim = 1280
         let { width, height } = img
         if (width > maxDim || height > maxDim) {
           if (width > height) {
@@ -61,8 +62,7 @@ function processImageFile(file: File): Promise<string> {
           return
         }
         ctx.drawImage(img, 0, 0, width, height)
-        const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
-        const dataUrl = canvas.toDataURL(mime, 0.85)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
         resolve(dataUrl)
       }
       img.onerror = () => resolve(e.target?.result as string)
@@ -71,38 +71,6 @@ function processImageFile(file: File): Promise<string> {
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
-}
-
-function parseSessionsList(val: string[] | string | undefined | null): string[] {
-  if (!val) return []
-  if (Array.isArray(val)) return val.map((s) => String(s).trim()).filter(Boolean)
-  if (typeof val === 'string') {
-    const trimmed = val.trim()
-    if (!trimmed) return []
-    // 1. Check if it's a JSON array string e.g. ["Session 1, with comma", "Session 2"]
-    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-      try {
-        const parsed = JSON.parse(trimmed)
-        if (Array.isArray(parsed)) {
-          return parsed.map((s) => String(s).trim()).filter(Boolean)
-        }
-      } catch {}
-    }
-    // 2. Multiline string
-    if (trimmed.includes('\n')) {
-      return trimmed
-        .split(/\r?\n+/)
-        .map((s) => s.replace(/^[•\-\*]\s*/, '').trim())
-        .filter(Boolean)
-    }
-    // 3. Double-pipe || separated
-    if (trimmed.includes('||')) {
-      return trimmed.split('||').map((s) => s.trim()).filter(Boolean)
-    }
-    // 4. Legacy comma-separated fallback for default conferences
-    return trimmed.split(/[,;\n•]+/).map((s) => s.trim()).filter(Boolean)
-  }
-  return []
 }
 
 export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -145,9 +113,10 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
   const [newSessionInput, setNewSessionInput] = useState('')
 
   function handleAddSession() {
-    if (!newSessionInput.trim() || !editingConference) return
+    const singleSession = newSessionInput.replace(/\s+/g, ' ').trim()
+    if (!singleSession || !editingConference) return
     const currentSessions = parseSessionsList(editingConference.sessions)
-    const updated = [...currentSessions, newSessionInput.trim()]
+    const updated = [...currentSessions, singleSession]
     setEditingConference({ ...editingConference, sessions: JSON.stringify(updated) })
     setNewSessionInput('')
   }
@@ -762,7 +731,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                                 ...c,
                                 description: displayDesc,
                                 theme: displayTheme,
-                                sessions: displaySessions,
+                                sessions: JSON.stringify(parseSessionsList(displaySessions)),
                                 images: (Array.isArray(c.images) && c.images.length > 0) ? c.images : (unpacked.images.length > 0 ? unpacked.images : [])
                               })
                             }}
@@ -1215,16 +1184,20 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Category</label>
-                  <select
-                    value={editingConference.category || 'Healthcare & Life Sciences'}
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Category / Topic</label>
+                  <input
+                    type="text"
+                    list="cms-category-list"
+                    value={editingConference.category || ''}
                     onChange={(e) => setEditingConference({ ...editingConference, category: e.target.value as Category })}
-                    className="mt-1.5 w-full rounded-xl border border-white/20 bg-navy-950 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
-                  >
+                    placeholder="e.g. Pharmaceutical Sciences, AI & Robotics..."
+                    className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-gold"
+                  />
+                  <datalist id="cms-category-list">
                     {categories.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
 
                 <div>

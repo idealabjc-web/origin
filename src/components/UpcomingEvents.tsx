@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { CalendarDays, MapPin, ArrowRight } from 'lucide-react'
-import { events as initialEvents, type UpcomingEvent } from '../data/content'
-import { getUpcomingEvents } from '../lib/supabase'
+import { getConferenceTopic, type UpcomingEvent } from '../data/content'
+import { getUpcomingEvents, getCachedUpcomingEvents } from '../lib/supabase'
 import Reveal from './Reveal'
 
 export default function UpcomingEvents({
@@ -9,7 +9,7 @@ export default function UpcomingEvents({
 }: {
   onSelectEvent?: (eventId: string) => void
 }) {
-  const [items, setItems] = useState<UpcomingEvent[]>(initialEvents)
+  const [items, setItems] = useState<UpcomingEvent[]>(() => getCachedUpcomingEvents())
 
   useEffect(() => {
     function load() {
@@ -68,7 +68,7 @@ export default function UpcomingEvents({
                     <MapPin size={14} className="text-gold-dark" />
                     {e.location}
                   </span>
-                  <span className="text-gold-dark font-semibold">{e.category}</span>
+                  <span className="text-gold-dark font-semibold">{getConferenceTopic(e)}</span>
                 </p>
               </div>
               <div className="flex items-center gap-4">
