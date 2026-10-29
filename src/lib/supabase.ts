@@ -42,16 +42,18 @@ export function notifyDataChanged() {
 
 // Local storage keys for resilient CMS operations when Supabase is unconfigured or in offline mode
 const LOCAL_CONFS_KEY = 'origin_conferences_v3_local'
-const FAST_CONFS_KEY = 'origin_fast_confs_v1'
+const FAST_CONFS_KEY = 'origin_fast_confs_v3'
 const LOCAL_EVENTS_KEY = 'origin_events_v3_local'
 const LOCAL_SPEAKERS_KEY = 'origin_speakers_local'
 const LOCAL_TESTIMONIALS_KEY = 'origin_testimonials_local'
 const LOCAL_GALLERY_KEY = 'origin_gallery_v2_local'
 
-// Purge legacy stale keys that could hold 1 partial conference due to base64 QuotaExceededError
+// Purge legacy stale keys that could hold empty themes/sessions or outdated cards
 if (typeof window !== 'undefined') {
   try {
     localStorage.removeItem('origin_conferences_local')
+    localStorage.removeItem('origin_fast_confs_v1')
+    localStorage.removeItem('origin_fast_confs_v2')
     localStorage.removeItem('origin_events_local')
   } catch {}
 }
@@ -167,7 +169,7 @@ async function saveFastConferencesCache(list: Conference[]) {
   if (typeof window === 'undefined') return
   // 1. Save full-res list in IndexedDB (no 5MB limit)
   idbSet(LOCAL_CONFS_KEY, list)
-  // 2. Save lightweight card snapshot in localStorage (~150KB total for instant 0ms synchronous startup)
+  // 2. Save lightweight card snapshot in localStorage (~160KB total with compressed cover thumbnails for instant 0ms startup)
   try {
     const lightList: Conference[] = await Promise.all(
       list.map(async (c) => ({
@@ -176,12 +178,12 @@ async function saveFastConferencesCache(list: Conference[]) {
         category: c.category,
         date: c.date,
         location: c.location,
-        description: (c.description || '').slice(0, 600),
+        description: c.description || '',
         image: await compressDataUrlForThumb(c.image),
         href: c.href || '#',
         theme: c.theme || '',
         sessions: c.sessions || '',
-        images: [],
+        images: Array.isArray(c.images) ? c.images : [],
       }))
     )
     setLocalItem(FAST_CONFS_KEY, lightList)
@@ -271,34 +273,37 @@ export async function getConferences(): Promise<Conference[]> {
   }
   inflightConferences = (async () => {
     try {
-      // Stage 1: If no cache in memory yet, fetch lightweight card fields first (skips 27 interior gallery images for 8x faster initial load)
+      // Stage 1: If no cache in memory yet, fetch lightweight card fields including text (theme, sessions, description)
       if (!memoryConferences || memoryConferences.length === 0) {
         const { data: fastData, error: fastErr } = await supabase
           .from('conferences')
-          .select('id, title, category, date, location, image, href, display_order')
+          .select('id, title, category, date, location, image, href, display_order, theme, sessions, description')
           .order('display_order', { ascending: true })
 
         if (!fastErr && fastData && fastData.length > 0) {
-          const quickList: Conference[] = fastData.map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            category: item.category,
-            date: item.date,
-            location: item.location,
-            description: '',
-            image: item.image,
-            href: item.href || '#',
-            theme: '',
-            sessions: '',
-            images: [],
-          }))
+          const quickList: Conference[] = fastData.map((item: any) => {
+            const { description: cleanDesc, theme: metaTheme, sessions: metaSessions } = unpackConferenceData(item.description)
+            return {
+              id: item.id,
+              title: item.title,
+              category: item.category,
+              date: item.date,
+              location: item.location,
+              description: cleanDesc || item.description || '',
+              image: item.image,
+              href: item.href || '#',
+              theme: item.theme || metaTheme || '',
+              sessions: item.sessions || metaSessions || '',
+              images: [],
+            }
+          })
           memoryConferences = quickList
           saveFastConferencesCache(quickList)
           notifyDataChanged()
         }
       }
 
-      // Stage 2: Fetch full conference details (including description, sessions, and gallery images) in background
+      // Stage 2: Fetch full conference details (including gallery images) in background
       const { data, error } = await supabase
         .from('conferences')
         .select('*')
@@ -350,6 +355,7 @@ export async function getConferences(): Promise<Conference[]> {
       })
       memoryConferences = list
       saveFastConferencesCache(list)
+      notifyDataChanged()
       return list
     } catch (err) {
       console.warn('[Supabase] Falling back to local/default conferences:', err)

@@ -7,7 +7,7 @@ import {
   BookOpen, Quote, ArrowUpRight, Sparkles
 } from 'lucide-react'
 import { getConferenceTopic, parseSessionsList, type Conference } from '../data/content'
-import { submitEventRegistration, getConferences, getCachedConferences, unpackConferenceData } from '../lib/supabase'
+import { submitEventRegistration, getConferences, getCachedConferences, unpackConferenceData, supabase, isSupabaseConfigured } from '../lib/supabase'
 
 interface ConferenceDetailsPageProps {
   conference: Conference
@@ -24,6 +24,7 @@ export default function ConferenceDetailsPage({
   onNavigateToConference,
   onNavigate
 }: ConferenceDetailsPageProps) {
+  const [currentConf, setCurrentConf] = useState<Conference>(conference)
   const [copied, setCopied] = useState(false)
   const [otherConferences, setOtherConferences] = useState<Conference[]>(() =>
     getCachedConferences().filter((c) => c.id !== conference.id)
@@ -37,6 +38,69 @@ export default function ConferenceDetailsPage({
   const [attendanceType, setAttendanceType] = useState<'In-Person' | 'Virtual Hybrid'>('In-Person')
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<{ kind: 'ok' | 'error' | 'info'; msg: string } | null>(null)
+
+  // Sync when prop changes
+  useEffect(() => {
+    setCurrentConf(conference)
+  }, [conference])
+
+  // Hydrate full Theme, Sessions, Description, and Images
+  useEffect(() => {
+    let isMounted = true
+
+    function syncConference() {
+      const all = getCachedConferences()
+      const found = all.find((c) => c.id.toLowerCase() === conference.id.toLowerCase())
+      if (found && isMounted) {
+        setCurrentConf((prev) => ({
+          ...prev,
+          ...found,
+          theme: found.theme || prev.theme,
+          sessions: found.sessions || prev.sessions,
+          description: found.description || prev.description,
+          images: (found.images && found.images.length > 0) ? found.images : prev.images,
+        }))
+      }
+    }
+
+    syncConference()
+    window.addEventListener('origin:data-updated', syncConference)
+
+    // Direct single query for guaranteed instant hydration of theme, sessions, and about
+    if (isSupabaseConfigured && supabase) {
+      supabase
+        .from('conferences')
+        .select('*')
+        .eq('id', conference.id)
+        .single()
+        .then(({ data, error }) => {
+          if (!error && data && isMounted) {
+            const { description: cleanDesc, theme: metaTheme, sessions: metaSessions, images: metaImages } = unpackConferenceData(data.description)
+            setCurrentConf((prev) => ({
+              ...prev,
+              id: data.id,
+              title: data.title,
+              category: data.category,
+              date: data.date,
+              location: data.location,
+              description: cleanDesc || data.description || '',
+              image: data.image,
+              href: data.href || '#',
+              theme: data.theme || metaTheme || '',
+              sessions: data.sessions || metaSessions || '',
+              images: (Array.isArray(data.images) && data.images.length > 0)
+                ? data.images
+                : (metaImages && metaImages.length > 0 ? metaImages : prev.images)
+            }))
+          }
+        })
+    }
+
+    return () => {
+      isMounted = false
+      window.removeEventListener('origin:data-updated', syncConference)
+    }
+  }, [conference.id])
 
   // Load other conferences dynamically from CMS / Supabase
   useEffect(() => {
@@ -52,15 +116,15 @@ export default function ConferenceDetailsPage({
   }, [conference.id])
 
   // Extract resilient theme, sessions, and images (from direct columns or embedded metadata)
-  const unpacked = unpackConferenceData(conference.description)
-  const effectiveTheme = conference.theme || unpacked.theme || ''
-  const effectiveSessions = conference.sessions || unpacked.sessions || ''
-  const effectiveImages = (Array.isArray(conference.images) && conference.images.length > 0)
-    ? conference.images
+  const unpacked = unpackConferenceData(currentConf.description)
+  const effectiveTheme = currentConf.theme || unpacked.theme || ''
+  const effectiveSessions = currentConf.sessions || unpacked.sessions || ''
+  const effectiveImages = (Array.isArray(currentConf.images) && currentConf.images.length > 0)
+    ? currentConf.images
     : (unpacked.images.length > 0 ? unpacked.images : [])
   const sessions = parseSessionsList(effectiveSessions)
   const middleImages = effectiveImages
-  const cleanDescription = (unpacked.description || conference.description || '')
+  const cleanDescription = (unpacked.description || currentConf.description || '')
     .replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '')
     .trim()
   const aboutParagraphs = cleanDescription
@@ -83,8 +147,8 @@ export default function ConferenceDetailsPage({
 
     setSubmitting(true)
     const res = await submitEventRegistration({
-      event_id: conference.id,
-      event_name: conference.title,
+      event_id: currentConf.id,
+      event_name: currentConf.title,
       full_name: name.trim(),
       email: email.trim(),
       organization: org.trim() || undefined,
@@ -167,7 +231,7 @@ export default function ConferenceDetailsPage({
           </div>
           <span className="text-[11px] font-mono text-amber-400/90 flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            Registration Open • {conference.location}
+            Registration Open • {currentConf.location}
           </span>
         </div>
       </nav>
@@ -177,8 +241,8 @@ export default function ConferenceDetailsPage({
         {/* Ambient Glowing Background Elements */}
         <div className="absolute inset-0 pointer-events-none">
           <img
-            src={conference.image}
-            alt={conference.title}
+            src={currentConf.image}
+            alt={currentConf.title}
             className="h-full w-full object-cover opacity-20 filter blur-sm scale-110"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-navy-950/90 to-navy-950/80" />
@@ -196,12 +260,12 @@ export default function ConferenceDetailsPage({
                 <span className="flex h-2 w-2 rounded-full bg-amber-400 animate-ping" />
                 <span className="uppercase text-[11px] font-mono">OFFICIAL WORLD CONGRESS</span>
                 <span className="text-white/40">•</span>
-                <span className="text-white/90">{getConferenceTopic(conference)}</span>
+                <span className="text-white/90">{getConferenceTopic(currentConf)}</span>
               </div>
 
               {/* Conference Title */}
               <h1 className="mt-6 font-display text-3xl font-extrabold leading-tight text-white sm:text-5xl lg:text-6xl tracking-tight drop-shadow-md">
-                {conference.title}
+                {currentConf.title}
               </h1>
 
               {/* Theme highlight if present */}
@@ -219,7 +283,7 @@ export default function ConferenceDetailsPage({
                   </div>
                   <div>
                     <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Date &amp; Schedule</div>
-                    <div className="font-display text-sm font-bold text-white">{conference.date}</div>
+                    <div className="font-display text-sm font-bold text-white">{currentConf.date}</div>
                   </div>
                 </div>
 
@@ -229,7 +293,7 @@ export default function ConferenceDetailsPage({
                   </div>
                   <div>
                     <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Venue &amp; Location</div>
-                    <div className="font-display text-sm font-bold text-white">{conference.location}</div>
+                    <div className="font-display text-sm font-bold text-white">{currentConf.location}</div>
                   </div>
                 </div>
               </div>
@@ -260,20 +324,20 @@ export default function ConferenceDetailsPage({
               <div className="relative rounded-3xl border border-amber-400/30 bg-gradient-to-b from-slate-900/90 to-navy-950/95 p-5 sm:p-6 backdrop-blur-2xl shadow-[0_0_60px_rgba(0,0,0,0.8)]">
                 <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-white/10 bg-navy-950">
                   <img
-                    src={conference.image}
-                    alt={conference.title}
+                    src={currentConf.image}
+                    alt={currentConf.title}
                     className="h-full w-full object-cover transition duration-700 hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
                   <div className="absolute top-3 left-3 rounded-full bg-navy-950/90 px-3 py-1 text-xs font-bold text-amber-400 border border-amber-400/30 backdrop-blur-md">
-                    {conference.category}
+                    {currentConf.category}
                   </div>
                   <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs text-white">
                     <span className="font-bold flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-emerald-400" />
                       Registration Open
                     </span>
-                    <span className="text-amber-300 font-mono text-[11px]">{conference.location}</span>
+                    <span className="text-amber-300 font-mono text-[11px]">{currentConf.location}</span>
                   </div>
                 </div>
 
@@ -381,7 +445,7 @@ export default function ConferenceDetailsPage({
                   <img
                     loading="lazy"
                     src={imgUrl}
-                    alt={`${conference.title} moment ${i + 1}`}
+                    alt={`${currentConf.title} moment ${i + 1}`}
                     className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-4">
@@ -448,7 +512,7 @@ export default function ConferenceDetailsPage({
               </h2>
               <div className="h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
               <p className="text-sm sm:text-base text-slate-300 leading-relaxed pt-2">
-                Register your participation for <strong className="text-white">{conference.title}</strong>.
+                Register your participation for <strong className="text-white">{currentConf.title}</strong>.
               </p>
             </div>
 
