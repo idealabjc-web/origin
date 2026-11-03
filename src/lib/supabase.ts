@@ -33,6 +33,54 @@ export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null
 
+// Uploads an image to the 'conference-images' bucket and returns its permanent CDN public URL
+export async function uploadConferenceImage(dataUrlOrFile: string | File | Blob, prefix = 'conf'): Promise<string | null> {
+  if (!supabase) return null
+  try {
+    let blob: Blob
+    let mime = 'image/jpeg'
+    let ext = 'jpg'
+
+    if (typeof dataUrlOrFile === 'string' && dataUrlOrFile.startsWith('data:image/')) {
+      const match = dataUrlOrFile.match(/^data:image\/([a-zA-Z+]+);base64,(.+)$/)
+      if (!match) return null
+      ext = match[1] === 'png' ? 'png' : 'jpg'
+      mime = ext === 'png' ? 'image/png' : 'image/jpeg'
+      const byteChars = atob(match[2])
+      const byteNumbers = new Array(byteChars.length)
+      for (let i = 0; i < byteChars.length; i++) {
+        byteNumbers[i] = byteChars.charCodeAt(i)
+      }
+      blob = new Blob([new Uint8Array(byteNumbers)], { type: mime })
+    } else if (dataUrlOrFile instanceof Blob) {
+      blob = dataUrlOrFile
+      mime = dataUrlOrFile.type || 'image/jpeg'
+      ext = mime.includes('png') ? 'png' : 'jpg'
+    } else {
+      return null
+    }
+
+    const fileName = `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext}`
+    const { error } = await supabase.storage
+      .from('conference-images')
+      .upload(fileName, blob, { contentType: mime, upsert: false })
+
+    if (error) {
+      console.warn('[Supabase Storage] upload error:', error.message)
+      return null
+    }
+
+    const { data } = supabase.storage
+      .from('conference-images')
+      .getPublicUrl(fileName)
+
+    return data?.publicUrl || null
+  } catch (err) {
+    console.warn('[Supabase Storage] upload exception:', err)
+    return null
+  }
+}
+
 // Helper to notify all React components to re-fetch live data immediately
 export function notifyDataChanged() {
   if (typeof window !== 'undefined') {

@@ -12,7 +12,7 @@ import {
   getSpeakers, upsertSpeaker, deleteSpeaker,
   getGallery, upsertGalleryItem, deleteGalleryItem,
   getNewsletterSubscribers, getEventRegistrations, getContactInquiries,
-  isSupabaseConfigured, unpackConferenceData
+  isSupabaseConfigured, unpackConferenceData, uploadConferenceImage
 } from '../../lib/supabase'
 import {
   categories,
@@ -136,9 +136,13 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
     try {
       setImageProcessing(true)
       const processedUrl = await processImageFile(file)
+      // Upload to Supabase Storage bucket for CDN delivery and low database egress
+      const cdnUrl = await uploadConferenceImage(processedUrl, `${editingConference?.id || 'conf'}-gallery`)
+      const finalUrl = cdnUrl || processedUrl
+
       if (editingConference) {
         const currentImgs = Array.isArray(editingConference.images) ? editingConference.images : []
-        setEditingConference({ ...editingConference, images: [...currentImgs, processedUrl] })
+        setEditingConference({ ...editingConference, images: [...currentImgs, finalUrl] })
       }
       showToast('Middle image added!')
     } catch {
@@ -163,10 +167,14 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
     try {
       setImageProcessing(true)
       const processedUrl = await processImageFile(file)
+      // Upload to Supabase Storage bucket for CDN delivery and low database egress
+      const cdnUrl = await uploadConferenceImage(processedUrl, `${editingConference?.id || 'conf'}-cover`)
+      const finalUrl = cdnUrl || processedUrl
+
       if (editingConference) {
-        setEditingConference({ ...editingConference, image: processedUrl })
+        setEditingConference({ ...editingConference, image: finalUrl })
       }
-      showToast('Cover image updated successfully!')
+      showToast('Cover image updated and saved to CDN!')
     } catch (err: any) {
       showToast('Failed to process image: ' + err.message, 'error')
     } finally {
