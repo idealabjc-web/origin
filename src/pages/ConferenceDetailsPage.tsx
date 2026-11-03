@@ -4,10 +4,11 @@ import {
   ArrowLeft, CalendarDays, MapPin,
   Share2, Ticket, ChevronRight,
   Layers, Send, X, Maximize2,
-  BookOpen, Quote, ArrowUpRight, Sparkles
+  BookOpen, Quote, ArrowUpRight, Sparkles,
+  Download, FileText, CheckCircle2, Phone, Mail, User, Loader2
 } from 'lucide-react'
 import { getConferenceTopic, parseSessionsList, type Conference } from '../data/content'
-import { submitEventRegistration, getConferences, getCachedConferences, unpackConferenceData, supabase, isSupabaseConfigured } from '../lib/supabase'
+import { submitEventRegistration, submitContactInquiry, getConferences, getCachedConferences, unpackConferenceData, supabase, isSupabaseConfigured } from '../lib/supabase'
 
 interface ConferenceDetailsPageProps {
   conference: Conference
@@ -39,6 +40,21 @@ export default function ConferenceDetailsPage({
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<{ kind: 'ok' | 'error' | 'info'; msg: string } | null>(null)
 
+  // Download Form Modal State (Brochure / Abstract)
+  const [downloadModal, setDownloadModal] = useState<{
+    isOpen: boolean
+    type: 'brochure' | 'abstract'
+  } | null>(null)
+
+  const [downloadForm, setDownloadForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+  })
+  const [downloadSubmitting, setDownloadSubmitting] = useState(false)
+  const [downloadSuccess, setDownloadSuccess] = useState(false)
+  const [directDownloadUrl, setDirectDownloadUrl] = useState('')
+
   // Sync when prop changes
   useEffect(() => {
     setCurrentConf(conference)
@@ -59,6 +75,8 @@ export default function ConferenceDetailsPage({
           sessions: found.sessions || prev.sessions,
           description: found.description || prev.description,
           images: (found.images && found.images.length > 0) ? found.images : prev.images,
+          brochureUrl: found.brochureUrl || prev.brochureUrl,
+          abstractUrl: found.abstractUrl || prev.abstractUrl,
         }))
       }
     }
@@ -76,7 +94,7 @@ export default function ConferenceDetailsPage({
         .single()
         .then(({ data, error }) => {
           if (!error && data && isMounted) {
-            const { description: cleanDesc, theme: metaTheme, sessions: metaSessions, images: metaImages } = unpackConferenceData(data.description)
+            const { description: cleanDesc, theme: metaTheme, sessions: metaSessions, images: metaImages, brochureUrl: metaBrochure, abstractUrl: metaAbstract } = unpackConferenceData(data.description)
             setCurrentConf((prev) => ({
               ...prev,
               id: data.id,
@@ -91,7 +109,9 @@ export default function ConferenceDetailsPage({
               sessions: data.sessions || metaSessions || '',
               images: (Array.isArray(data.images) && data.images.length > 0)
                 ? data.images
-                : (metaImages && metaImages.length > 0 ? metaImages : prev.images)
+                : (metaImages && metaImages.length > 0 ? metaImages : prev.images),
+              brochureUrl: data.brochure_url || data.brochureUrl || metaBrochure || prev.brochureUrl || '',
+              abstractUrl: data.abstract_url || data.abstractUrl || metaAbstract || prev.abstractUrl || ''
             }))
           }
         })
@@ -116,13 +136,15 @@ export default function ConferenceDetailsPage({
     window.scrollTo({ top: 0, behavior: 'instant' })
   }, [conference.id])
 
-  // Extract resilient theme, sessions, and images (from direct columns or embedded metadata)
+  // Extract resilient theme, sessions, images, and brochure/abstract (from direct columns or embedded metadata)
   const unpacked = unpackConferenceData(currentConf.description)
   const effectiveTheme = currentConf.theme || unpacked.theme || ''
   const effectiveSessions = currentConf.sessions || unpacked.sessions || ''
   const effectiveImages = (Array.isArray(currentConf.images) && currentConf.images.length > 0)
     ? currentConf.images
     : (unpacked.images.length > 0 ? unpacked.images : [])
+  const effectiveBrochureUrl = currentConf.brochureUrl || unpacked.brochureUrl || ''
+  const effectiveAbstractUrl = currentConf.abstractUrl || unpacked.abstractUrl || ''
   const sessions = parseSessionsList(effectiveSessions)
   const middleImages = effectiveImages
   const cleanDescription = (unpacked.description || currentConf.description || '')
@@ -138,6 +160,141 @@ export default function ConferenceDetailsPage({
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
     }
+  }
+
+  function openDownloadModal(type: 'brochure' | 'abstract') {
+    setDownloadModal({ isOpen: true, type })
+    setDownloadSuccess(false)
+    setDirectDownloadUrl('')
+  }
+
+  function closeDownloadModal() {
+    setDownloadModal(null)
+    setDownloadSuccess(false)
+    setDirectDownloadUrl('')
+  }
+
+  function triggerDocumentDownload(conf: Conference, type: 'brochure' | 'abstract') {
+    const isBrochure = type === 'brochure'
+    const targetUrl = isBrochure
+      ? (conf.brochureUrl || effectiveBrochureUrl)
+      : (conf.abstractUrl || effectiveAbstractUrl)
+
+    if (targetUrl && targetUrl.trim()) {
+      setDirectDownloadUrl(targetUrl.trim())
+      const link = document.createElement('a')
+      link.href = targetUrl.trim()
+      link.target = '_blank'
+      link.download = `${conf.title.replace(/[^a-zA-Z0-9]/g, '_')}_${isBrochure ? 'Brochure' : 'Abstract'}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
+
+    // Auto-generate official printable conference document if no custom file uploaded yet
+    const docTitle = isBrochure ? `Official Conference Brochure` : `Call for Abstracts & Submission Guidelines`
+    const docContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${docTitle} - ${conf.title}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #0f172a; line-height: 1.6; max-width: 800px; margin: auto; }
+          .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
+          .logo { font-size: 24px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 1px; }
+          .logo span { color: #d97706; }
+          .title { font-size: 26px; font-weight: 800; color: #0f172a; margin: 15px 0 10px; line-height: 1.3; }
+          .meta { font-size: 14px; color: #475569; margin-bottom: 8px; }
+          .theme { font-style: italic; color: #b45309; font-weight: 600; font-size: 16px; margin: 15px 0; background: #fef3c7; padding: 12px 18px; border-radius: 8px; }
+          h2 { font-size: 18px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-top: 30px; text-transform: uppercase; letter-spacing: 0.5px; }
+          p { margin: 10px 0; font-size: 14px; }
+          ul { padding-left: 20px; }
+          li { margin-bottom: 6px; font-size: 14px; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
+          .btn-print { background: #0f172a; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+          @media print { .btn-print { display: none; } }
+        </style>
+      </head>
+      <body>
+        <button class="btn-print" onclick="window.print()">Print or Save as PDF</button>
+        <div class="header">
+          <div class="logo">ORIGIN <span>GLOBAL CONFERENCES</span></div>
+          <div class="title">${conf.title}</div>
+          <div class="meta"><strong>Date & Schedule:</strong> ${conf.date}</div>
+          <div class="meta"><strong>Location:</strong> ${conf.location}</div>
+          <div class="meta"><strong>Category:</strong> ${conf.category}</div>
+          ${conf.theme ? `<div class="theme">"${conf.theme}"</div>` : ''}
+        </div>
+        ${isBrochure ? `
+          <h2>Executive Overview</h2>
+          <p>${(conf.description || '').replace(/\\n/g, '<br/>')}</p>
+          <h2>Scientific Sessions & Tracks</h2>
+          <ul>
+            ${parseSessionsList(conf.sessions).map(s => `<li>${s}</li>`).join('')}
+          </ul>
+          <h2>Delegate Registration & Inquiries</h2>
+          <p>For registrations, group accommodations, or sponsorships, contact our delegate desk at <strong>contact@originconferences.com</strong>.</p>
+        ` : `
+          <h2>Call for Abstracts & Guidelines</h2>
+          <p>Researchers, academicians, and clinicians are cordially invited to submit their original abstracts for oral, poster, and virtual presentations at <strong>${conf.title}</strong>.</p>
+          <h2>Track Categories</h2>
+          <ul>
+            ${parseSessionsList(conf.sessions).map(s => `<li>${s}</li>`).join('')}
+          </ul>
+          <h2>Submission Requirements</h2>
+          <ul>
+            <li>Abstract length: 250 - 300 words.</li>
+            <li>Include: Title, Author names, Affiliations, and 3 - 5 Keywords.</li>
+            <li>Format: Introduction, Methods, Results, and Conclusion.</li>
+            <li>Submit directly via contact@originconferences.com or through your delegate advisor.</li>
+          </ul>
+        `}
+        <div class="footer">
+          ORIGIN Global Conferences • https://www.originconferences.com • contact@originconferences.com
+        </div>
+      </body>
+      </html>
+    `
+    const blob = new Blob([docContent], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    setDirectDownloadUrl(url)
+    const newTab = window.open(url, '_blank')
+    if (!newTab) {
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${conf.title.replace(/[^a-zA-Z0-9]/g, '_')}_${isBrochure ? 'Brochure' : 'Abstract'}.html`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
+
+  async function handleDownloadSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!downloadForm.name.trim() || !downloadForm.email.trim() || !downloadForm.phone.trim()) {
+      return
+    }
+
+    setDownloadSubmitting(true)
+    const isBrochure = downloadModal?.type === 'brochure'
+    const docTypeLabel = isBrochure ? 'Brochure' : 'Abstract'
+
+    try {
+      await submitContactInquiry({
+        name: downloadForm.name.trim(),
+        email: downloadForm.email.trim(),
+        phone: downloadForm.phone.trim(),
+        inquiry_type: isBrochure ? 'brochure_download' : 'abstract_download',
+        message: `[Delegate Materials Download] Requested ${docTypeLabel} for "${currentConf.title}" (${currentConf.date}, ${currentConf.location}). Mobile: ${downloadForm.phone.trim()}`,
+      })
+    } catch (err) {
+      console.warn('Inquiry submission notice:', err)
+    }
+
+    triggerDocumentDownload(currentConf, isBrochure ? 'brochure' : 'abstract')
+    setDownloadSubmitting(false)
+    setDownloadSuccess(true)
   }
 
   async function handleRegister(e: FormEvent) {
@@ -222,6 +379,7 @@ export default function ConferenceDetailsPage({
             {effectiveTheme && (
               <a href="#theme" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Theme</a>
             )}
+            <a href="#downloads" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Brochure &amp; Abstract</a>
             {middleImages.length > 0 && (
               <a href="#gallery" className="px-3.5 py-1.5 rounded-full hover:bg-white/5 hover:text-amber-300 transition">Gallery ({middleImages.length})</a>
             )}
@@ -300,21 +458,37 @@ export default function ConferenceDetailsPage({
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-9 flex flex-wrap items-center gap-4">
+              <div className="mt-9 flex flex-wrap items-center gap-3 sm:gap-4">
                 <a
                   href="#register-section"
-                  className="btn btn-gold text-sm font-extrabold px-8 py-4 shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.7)] flex items-center gap-2 rounded-full transform hover:scale-105 transition duration-300"
+                  className="btn btn-gold text-sm font-extrabold px-7 py-3.5 shadow-[0_0_25px_rgba(245,158,11,0.4)] hover:shadow-[0_0_40px_rgba(245,158,11,0.7)] flex items-center gap-2 rounded-full transform hover:scale-105 transition duration-300"
                 >
-                  <Ticket size={18} />
+                  <Ticket size={17} />
                   <span>Register as Delegate</span>
                 </a>
+                <button
+                  type="button"
+                  onClick={() => openDownloadModal('brochure')}
+                  className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-5 py-3.5 text-xs sm:text-sm font-bold text-amber-300 hover:bg-amber-400/20 hover:border-amber-400 transition shadow-lg"
+                >
+                  <Download size={16} />
+                  <span>Brochure</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openDownloadModal('abstract')}
+                  className="inline-flex items-center gap-2 rounded-full border border-blue-400/40 bg-blue-500/10 px-5 py-3.5 text-xs sm:text-sm font-bold text-blue-300 hover:bg-blue-500/20 hover:border-blue-400 transition shadow-lg"
+                >
+                  <FileText size={16} />
+                  <span>Abstract</span>
+                </button>
                 {sessions.length > 0 && (
                   <a
                     href="#sessions"
-                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-4 text-sm font-bold text-white hover:bg-white/15 hover:border-amber-400 transition"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3.5 text-xs sm:text-sm font-bold text-white hover:bg-white/15 hover:border-amber-400 transition"
                   >
-                    <Layers size={17} className="text-amber-400" />
-                    <span>View {sessions.length} Sessions</span>
+                    <Layers size={16} className="text-amber-400" />
+                    <span>{sessions.length} Sessions</span>
                   </a>
                 )}
               </div>
@@ -412,7 +586,111 @@ export default function ConferenceDetailsPage({
           </section>
         )}
 
-        {/* 3. MIDDLE IMAGES SECTION (CONFERENCE GALLERY) */}
+        {/* ── 3. SIDE-BY-SIDE DOWNLOADS: BROCHURE & ABSTRACT ── */}
+        <section id="downloads" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 lg:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
+          <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -left-20 -bottom-20 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+
+          <div>
+            <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-amber-400 mb-2">
+              <Download size={15} /> Official Materials
+            </div>
+            <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl">
+              Conference Brochure &amp; Abstract
+            </h2>
+            <div className="mt-3 h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
+            <p className="mt-3 text-sm text-slate-300 max-w-2xl leading-relaxed">
+              Access the official delegate documentation. Download the comprehensive conference brochure and abstract submission guidelines below.
+            </p>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            {/* 1. BROCHURE CARD */}
+            <div className="relative group overflow-hidden rounded-2xl border border-amber-400/30 bg-gradient-to-br from-slate-900/90 via-navy-950/90 to-slate-900/90 p-6 sm:p-8 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-amber-400/60 hover:-translate-y-1">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
+
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 px-3 py-1 text-[11px] font-bold text-amber-300 uppercase tracking-wider font-mono">
+                    <BookOpen size={12} /> Official Agenda
+                  </span>
+                  <span className="text-[11px] text-white/50 font-mono">PDF Document</span>
+                </div>
+
+                <h3 className="font-display text-2xl font-bold text-white group-hover:text-amber-200 transition-colors">
+                  Conference Brochure
+                </h3>
+                <p className="mt-3 text-sm text-slate-300/90 leading-relaxed">
+                  Download the complete multi-day schedule, keynote speaker line-up, technical session tracks, venue details, and delegate registration packages.
+                </p>
+
+                <ul className="mt-4 space-y-1.5 text-xs text-slate-400">
+                  <li className="flex items-center gap-2 text-slate-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Full session tracks &amp; plenary timings
+                  </li>
+                  <li className="flex items-center gap-2 text-slate-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Keynote speakers &amp; travel guidelines
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-6 pt-5 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => openDownloadModal('brochure')}
+                  className="w-full btn btn-gold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 font-bold shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transition"
+                >
+                  <Download size={16} />
+                  <span>Download Brochure</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 2. ABSTRACT CARD */}
+            <div className="relative group overflow-hidden rounded-2xl border border-blue-400/30 bg-gradient-to-br from-slate-900/90 via-navy-950/90 to-slate-900/90 p-6 sm:p-8 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-blue-400/60 hover:-translate-y-1">
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/60 to-transparent" />
+
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-400/15 border border-blue-400/30 px-3 py-1 text-[11px] font-bold text-blue-300 uppercase tracking-wider font-mono">
+                    <FileText size={12} /> Call for Papers
+                  </span>
+                  <span className="text-[11px] text-white/50 font-mono">PDF / DOCX</span>
+                </div>
+
+                <h3 className="font-display text-2xl font-bold text-white group-hover:text-blue-200 transition-colors">
+                  Conference Abstract
+                </h3>
+                <p className="mt-3 text-sm text-slate-300/90 leading-relaxed">
+                  Download the official abstract formatting template, presentation submission guidelines (Oral, Poster, Virtual), review criteria, and deadlines.
+                </p>
+
+                <ul className="mt-4 space-y-1.5 text-xs text-slate-400">
+                  <li className="flex items-center gap-2 text-slate-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-400" /> Abstract submission rules &amp; word count
+                  </li>
+                  <li className="flex items-center gap-2 text-slate-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-400" /> Formatting template &amp; subject tracks
+                  </li>
+                </ul>
+              </div>
+
+              <div className="mt-6 pt-5 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => openDownloadModal('abstract')}
+                  className="w-full inline-flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 py-3.5 px-6 font-bold text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] hover:brightness-110 transition"
+                >
+                  <Download size={16} />
+                  <span>Download Abstract</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. MIDDLE IMAGES SECTION (CONFERENCE GALLERY) */}
         {middleImages.length > 0 && (
           <section id="gallery" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 lg:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
@@ -743,6 +1021,176 @@ export default function ConferenceDetailsPage({
                 className="max-h-[85vh] w-auto object-contain mx-auto"
               />
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Download Lead Capture Modal (Brochure / Abstract) ── */}
+      <AnimatePresence>
+        {downloadModal?.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+            onClick={closeDownloadModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-amber-400/30 bg-gradient-to-b from-slate-900 via-navy-950 to-slate-950 p-6 sm:p-8 shadow-2xl backdrop-blur-xl"
+            >
+              {/* Gold Top Accent Line */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent" />
+
+              {/* Close Button */}
+              <button
+                onClick={closeDownloadModal}
+                className="absolute top-5 right-5 rounded-full p-2 text-slate-400 hover:text-white hover:bg-white/10 transition"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+
+              {!downloadSuccess ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-400/15 border border-amber-400/30 text-amber-400">
+                      {downloadModal.type === 'brochure' ? <Download size={22} /> : <FileText size={22} />}
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-widest text-amber-400 font-mono">
+                        Instant Access
+                      </span>
+                      <h3 className="font-display text-xl sm:text-2xl font-extrabold text-white">
+                        {downloadModal.type === 'brochure' ? 'Download Brochure' : 'Download Abstract'}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <p className="mt-3 text-sm text-slate-300 leading-relaxed">
+                    Please provide your contact details to access the official {downloadModal.type === 'brochure' ? 'conference brochure, itinerary, and speaker line-up' : 'call for abstracts, formatting templates, and submission guidelines'} for{' '}
+                    <span className="text-white font-semibold">{currentConf.title}</span>.
+                  </p>
+
+                  <form onSubmit={handleDownloadSubmit} className="mt-6 space-y-4">
+                    {/* Name */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Full Name <span className="text-amber-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                        <input
+                          type="text"
+                          required
+                          value={downloadForm.name}
+                          onChange={(e) => setDownloadForm((prev) => ({ ...prev, name: e.target.value }))}
+                          placeholder="e.g. Dr. Alex Morgan"
+                          className="w-full rounded-xl border border-white/15 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Email Address <span className="text-amber-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                        <input
+                          type="email"
+                          required
+                          value={downloadForm.email}
+                          onChange={(e) => setDownloadForm((prev) => ({ ...prev, email: e.target.value }))}
+                          placeholder="e.g. alex.morgan@university.edu"
+                          className="w-full rounded-xl border border-white/15 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Mobile Number */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Mobile Number <span className="text-amber-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={17} />
+                        <input
+                          type="tel"
+                          required
+                          value={downloadForm.phone}
+                          onChange={(e) => setDownloadForm((prev) => ({ ...prev, phone: e.target.value }))}
+                          placeholder="e.g. +1 (555) 234-5678"
+                          className="w-full rounded-xl border border-white/15 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                        />
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 leading-normal pt-1">
+                      By submitting, you agree to receive official conference communications. We respect your privacy.
+                    </p>
+
+                    <button
+                      type="submit"
+                      disabled={downloadSubmitting}
+                      className="mt-2 w-full btn btn-gold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2.5 font-bold shadow-[0_0_25px_rgba(245,158,11,0.35)] hover:shadow-[0_0_35px_rgba(245,158,11,0.5)] transition disabled:opacity-50"
+                    >
+                      {downloadSubmitting ? (
+                        <>
+                          <Loader2 className="animate-spin" size={18} />
+                          <span>Preparing Document...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download size={18} />
+                          <span>Download {downloadModal.type === 'brochure' ? 'Brochure' : 'Abstract'} Now</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <div className="py-4 text-center">
+                  <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    <CheckCircle2 size={32} />
+                  </div>
+                  <h3 className="mt-4 font-display text-2xl font-extrabold text-white">
+                    Download Initiated!
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-300 max-w-sm mx-auto">
+                    Thank you, <span className="text-white font-semibold">{downloadForm.name}</span>. Your {downloadModal.type === 'brochure' ? 'brochure' : 'abstract document'} is downloading.
+                  </p>
+
+                  {directDownloadUrl && (
+                    <div className="mt-5">
+                      <a
+                        href={directDownloadUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        download
+                        className="inline-flex items-center gap-2 text-xs font-bold text-amber-400 hover:text-amber-300 underline underline-offset-4"
+                      >
+                        <Download size={14} /> Click here if your download didn't start automatically
+                      </a>
+                    </div>
+                  )}
+
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={closeDownloadModal}
+                      className="rounded-xl border border-white/20 bg-white/10 px-8 py-2.5 text-sm font-semibold text-white hover:bg-white/20 transition"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

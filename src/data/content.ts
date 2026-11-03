@@ -158,6 +158,8 @@ export interface Conference {
   theme?: string
   sessions?: string
   images?: string[]
+  brochureUrl?: string
+  abstractUrl?: string
 }
 export const conferences: Conference[] = []
 

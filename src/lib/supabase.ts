@@ -81,6 +81,36 @@ export async function uploadConferenceImage(dataUrlOrFile: string | File | Blob,
   }
 }
 
+// Uploads a document (PDF, DOC, DOCX, TXT) to the 'conference-images' bucket for brochures/abstracts
+export async function uploadConferenceDocument(file: File | Blob, prefix = 'doc'): Promise<string | null> {
+  if (!supabase) return null
+  try {
+    const rawName = (file as any).name || 'document.pdf'
+    const extMatch = rawName.match(/\.([a-zA-Z0-9]+)$/)
+    const ext = extMatch ? extMatch[1].toLowerCase() : 'pdf'
+    const fileName = `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext}`
+    const mime = file.type || (ext === 'pdf' ? 'application/pdf' : 'application/octet-stream')
+
+    const { error } = await supabase.storage
+      .from('conference-images')
+      .upload(`documents/${fileName}`, file, { contentType: mime, upsert: false })
+
+    if (error) {
+      console.warn('[Supabase Storage] document upload error:', error.message)
+      return null
+    }
+
+    const { data } = supabase.storage
+      .from('conference-images')
+      .getPublicUrl(`documents/${fileName}`)
+
+    return data?.publicUrl || null
+  } catch (err) {
+    console.warn('[Supabase Storage] document upload exception:', err)
+    return null
+  }
+}
+
 // Helper to notify all React components to re-fetch live data immediately
 export function notifyDataChanged() {
   if (typeof window !== 'undefined') {
@@ -232,6 +262,8 @@ async function saveFastConferencesCache(list: Conference[]) {
         theme: c.theme || '',
         sessions: c.sessions || '',
         images: Array.isArray(c.images) ? c.images : [],
+        brochureUrl: c.brochureUrl || '',
+        abstractUrl: c.abstractUrl || '',
       }))
     )
     setLocalItem(FAST_CONFS_KEY, lightList)
@@ -260,11 +292,11 @@ if (typeof window !== 'undefined') {
 // ==========================================
 // RESILIENT DATA PACKERS / UNPACKERS
 // ==========================================
-// Persists theme, sessions, and images even if individual columns are missing in Supabase
+// Persists theme, sessions, images, brochure, and abstract even if individual columns are missing in Supabase
 export function unpackConferenceData(desc: string | undefined | null) {
-  if (!desc) return { description: '', theme: '', sessions: '', images: [] as string[] }
+  if (!desc) return { description: '', theme: '', sessions: '', images: [] as string[], brochureUrl: '', abstractUrl: '' }
   const match = desc.match(/<!--ORIGIN_DATA:([\s\S]*?)-->/)
-  if (!match) return { description: desc, theme: '', sessions: '', images: [] as string[] }
+  if (!match) return { description: desc, theme: '', sessions: '', images: [] as string[], brochureUrl: '', abstractUrl: '' }
   try {
     const meta = JSON.parse(match[1])
     const cleanDesc = desc.replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '').trim()
@@ -272,21 +304,25 @@ export function unpackConferenceData(desc: string | undefined | null) {
       description: cleanDesc,
       theme: typeof meta.theme === 'string' ? meta.theme : '',
       sessions: typeof meta.sessions === 'string' ? meta.sessions : (Array.isArray(meta.sessions) ? JSON.stringify(meta.sessions) : ''),
-      images: Array.isArray(meta.images) ? (meta.images as string[]) : ([] as string[])
+      images: Array.isArray(meta.images) ? (meta.images as string[]) : ([] as string[]),
+      brochureUrl: typeof meta.brochureUrl === 'string' ? meta.brochureUrl : (typeof meta.brochure === 'string' ? meta.brochure : ''),
+      abstractUrl: typeof meta.abstractUrl === 'string' ? meta.abstractUrl : (typeof meta.abstract === 'string' ? meta.abstract : ''),
     }
   } catch {
-    return { description: desc, theme: '', sessions: '', images: [] as string[] }
+    return { description: desc, theme: '', sessions: '', images: [] as string[], brochureUrl: '', abstractUrl: '' }
   }
 }
 
-export function packConferenceData(desc: string, meta: { theme?: string; sessions?: string; images?: string[] }): string {
+export function packConferenceData(desc: string, meta: { theme?: string; sessions?: string; images?: string[]; brochureUrl?: string; abstractUrl?: string }): string {
   const clean = (desc || '').replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '').trim()
   const payload = {
     theme: meta.theme || '',
     sessions: meta.sessions || '',
-    images: Array.isArray(meta.images) ? meta.images : []
+    images: Array.isArray(meta.images) ? meta.images : [],
+    brochureUrl: meta.brochureUrl || '',
+    abstractUrl: meta.abstractUrl || ''
   }
-  if (!payload.theme && !payload.sessions && payload.images.length === 0) {
+  if (!payload.theme && !payload.sessions && payload.images.length === 0 && !payload.brochureUrl && !payload.abstractUrl) {
     return clean
   }
   return `${clean}\n\n<!--ORIGIN_DATA:${JSON.stringify(payload)}-->`
@@ -344,10 +380,12 @@ export async function getConferences(forceRefresh = false): Promise<Conference[]
       const list = data.map((item) => {
         const localMatch = localConfs.find((c) => c.id === item.id)
         const defaultMatch = defaultConferences.find((c) => c.id === item.id)
-        const { description: cleanDesc, theme: metaTheme, sessions: metaSessions, images: metaImages } = unpackConferenceData(item.description)
+        const { description: cleanDesc, theme: metaTheme, sessions: metaSessions, images: metaImages, brochureUrl: metaBrochure, abstractUrl: metaAbstract } = unpackConferenceData(item.description)
 
         const theme = item.theme || metaTheme || localMatch?.theme || defaultMatch?.theme || ''
         const sessions = item.sessions || metaSessions || localMatch?.sessions || defaultMatch?.sessions || ''
+        const brochureUrl = item.brochure_url || item.brochureUrl || metaBrochure || localMatch?.brochureUrl || defaultMatch?.brochureUrl || ''
+        const abstractUrl = item.abstract_url || item.abstractUrl || metaAbstract || localMatch?.abstractUrl || defaultMatch?.abstractUrl || ''
 
         let images: string[] = []
         if (Array.isArray(item.images) && item.images.length > 0) {
@@ -377,6 +415,8 @@ export async function getConferences(forceRefresh = false): Promise<Conference[]
           theme,
           sessions,
           images,
+          brochureUrl,
+          abstractUrl,
         }
       })
       memoryConferences = list
@@ -551,15 +591,17 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
   const idx = current.findIndex(c => c.id === conf.id)
   const existingItem = idx >= 0 ? current[idx] : null
 
-  // Ensure theme, sessions, images, and description are safely extracted and merged
+  // Ensure theme, sessions, images, brochure, abstract, and description are safely extracted and merged
   const theme = conf.theme !== undefined ? conf.theme : (existingItem?.theme || '')
   const sessions = conf.sessions !== undefined ? conf.sessions : (existingItem?.sessions || '')
   const images = conf.images !== undefined ? conf.images : (existingItem?.images || [])
+  const brochureUrl = conf.brochureUrl !== undefined ? conf.brochureUrl : (existingItem?.brochureUrl || '')
+  const abstractUrl = conf.abstractUrl !== undefined ? conf.abstractUrl : (existingItem?.abstractUrl || '')
   const cleanDescription = (conf.description !== undefined ? conf.description : (existingItem?.description || ''))
     .replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '')
     .trim()
 
-  const packedDescription = packConferenceData(cleanDescription, { theme, sessions, images })
+  const packedDescription = packConferenceData(cleanDescription, { theme, sessions, images, brochureUrl, abstractUrl })
 
   const newItem: Conference = {
     id: conf.id,
@@ -573,6 +615,8 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
     theme,
     sessions,
     images,
+    brochureUrl,
+    abstractUrl,
   }
 
   if (idx >= 0) {
@@ -603,6 +647,8 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
     payload.theme = theme
     payload.sessions = sessions
     payload.images = images
+    payload.brochure_url = brochureUrl
+    payload.abstract_url = abstractUrl
 
     let { error } = await supabase
       .from('conferences')
@@ -620,14 +666,22 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
       if (error.message.includes('theme')) {
         delete payload.theme
       }
+      if (error.message.includes('brochure_url')) {
+        delete payload.brochure_url
+      }
+      if (error.message.includes('abstract_url')) {
+        delete payload.abstract_url
+      }
       const retry = await supabase.from('conferences').upsert(payload, { onConflict: 'id' })
       error = retry.error
 
-      // If still erroring on any schema/column issue, save base columns (description still contains all theme/sessions data)
+      // If still erroring on any schema/column issue, save base columns (description still contains all theme/sessions/docs data)
       if (error && (error.message.includes('column') || error.message.includes('schema'))) {
         delete payload.theme
         delete payload.sessions
         delete payload.images
+        delete payload.brochure_url
+        delete payload.abstract_url
         const baseRetry = await supabase.from('conferences').upsert(payload, { onConflict: 'id' })
         error = baseRetry.error
       }
@@ -931,7 +985,7 @@ export interface ContactInquiryInput {
   name: string
   email: string
   phone?: string
-  inquiry_type?: 'general' | 'speaker' | 'partnership'
+  inquiry_type?: 'general' | 'speaker' | 'partnership' | 'brochure_download' | 'abstract_download' | string
   message?: string
 }
 

@@ -12,7 +12,7 @@ import {
   getSpeakers, upsertSpeaker, deleteSpeaker,
   getGallery, upsertGalleryItem, deleteGalleryItem,
   getNewsletterSubscribers, getEventRegistrations, getContactInquiries,
-  isSupabaseConfigured, unpackConferenceData, uploadConferenceImage
+  isSupabaseConfigured, unpackConferenceData, uploadConferenceImage, uploadConferenceDocument
 } from '../../lib/supabase'
 import {
   categories,
@@ -106,8 +106,47 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
   // Drag & drop image upload state
   const [isDraggingImage, setIsDraggingImage] = useState(false)
   const [imageProcessing, setImageProcessing] = useState(false)
+  const [uploadingDoc, setUploadingDoc] = useState<'brochure' | 'abstract' | null>(null)
   const confFileInputRef = useRef<HTMLInputElement>(null)
   const middleImagesInputRef = useRef<HTMLInputElement>(null)
+  const brochureInputRef = useRef<HTMLInputElement>(null)
+  const abstractInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleUploadBrochure(file: File) {
+    if (!file) return
+    try {
+      setUploadingDoc('brochure')
+      const cdnUrl = await uploadConferenceDocument(file, `${editingConference?.id || 'conf'}-brochure`)
+      if (cdnUrl && editingConference) {
+        setEditingConference({ ...editingConference, brochureUrl: cdnUrl })
+        showToast('Conference Brochure uploaded to CDN successfully!')
+      } else {
+        showToast('Failed to upload brochure to storage', 'error')
+      }
+    } catch (err: any) {
+      showToast('Brochure upload error: ' + err.message, 'error')
+    } finally {
+      setUploadingDoc(null)
+    }
+  }
+
+  async function handleUploadAbstract(file: File) {
+    if (!file) return
+    try {
+      setUploadingDoc('abstract')
+      const cdnUrl = await uploadConferenceDocument(file, `${editingConference?.id || 'conf'}-abstract`)
+      if (cdnUrl && editingConference) {
+        setEditingConference({ ...editingConference, abstractUrl: cdnUrl })
+        showToast('Conference Abstract uploaded to CDN successfully!')
+      } else {
+        showToast('Failed to upload abstract to storage', 'error')
+      }
+    } catch (err: any) {
+      showToast('Abstract upload error: ' + err.message, 'error')
+    } finally {
+      setUploadingDoc(null)
+    }
+  }
 
   // One-by-one session state
   const [newSessionInput, setNewSessionInput] = useState('')
@@ -265,6 +304,8 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
       description: editingConference.description || '',
       image: editingConference.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=900&q=70',
       images: editingConference.images || [],
+      brochureUrl: (editingConference.brochureUrl || '').trim(),
+      abstractUrl: (editingConference.abstractUrl || '').trim(),
       href: editingConference.href || '#'
     })
     setLoading(false)
@@ -700,6 +741,8 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                       theme: '',
                       sessions: '',
                       description: '',
+                      brochureUrl: '',
+                      abstractUrl: '',
                       image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=900&q=70',
                       href: '#'
                     })}
@@ -740,7 +783,9 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                                 description: displayDesc,
                                 theme: displayTheme,
                                 sessions: JSON.stringify(parseSessionsList(displaySessions)),
-                                images: (Array.isArray(c.images) && c.images.length > 0) ? c.images : (unpacked.images.length > 0 ? unpacked.images : [])
+                                images: (Array.isArray(c.images) && c.images.length > 0) ? c.images : (unpacked.images.length > 0 ? unpacked.images : []),
+                                brochureUrl: c.brochureUrl || unpacked.brochureUrl || '',
+                                abstractUrl: c.abstractUrl || unpacked.abstractUrl || ''
                               })
                             }}
                             className="flex items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/20"
@@ -1379,6 +1424,141 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                     No sessions added yet. Enter a session title above and click <strong className="text-white/60">Add Session</strong> or press <strong className="text-white/60">Enter</strong>.
                   </div>
                 )}
+              </div>
+
+              {/* FLOW ITEM 5: BROCHURE & ABSTRACT DOWNLOAD DOCUMENTS */}
+              <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-white/80">
+                      Delegate Downloads (Brochure &amp; Abstract)
+                    </label>
+                    <p className="text-[11px] text-white/50">
+                      Displayed side-by-side on the conference page. Visitors fill a lead form (Name, Mail, Mobile) to download.
+                    </p>
+                  </div>
+                  <span className="text-[11px] text-gold/80 font-mono">Side-by-Side on Site</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  {/* 1. BROCHURE */}
+                  <div className="rounded-xl border border-amber-400/20 bg-white/5 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                        <FileText size={15} /> Conference Brochure
+                      </span>
+                      {editingConference.brochureUrl ? (
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckCircle2 size={11} /> File Linked
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-white/40">Not set (Auto-generated)</span>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        disabled={uploadingDoc === 'brochure'}
+                        onClick={() => brochureInputRef.current?.click()}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-amber-400/40 bg-amber-400/10 px-4 py-2.5 text-xs font-bold text-amber-300 hover:bg-amber-400/20 hover:border-amber-400 transition"
+                      >
+                        <UploadCloud size={15} />
+                        {uploadingDoc === 'brochure' ? 'Uploading Brochure to Storage...' : 'Upload Brochure (PDF / DOC)'}
+                      </button>
+                      <input
+                        ref={brochureInputRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) handleUploadBrochure(file)
+                          e.target.value = ''
+                        }}
+                      />
+
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={editingConference.brochureUrl || ''}
+                          onChange={(e) => setEditingConference({ ...editingConference, brochureUrl: e.target.value })}
+                          placeholder="Or paste external Brochure PDF URL..."
+                          className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white placeholder-white/30 outline-none focus:border-gold font-mono pr-7"
+                        />
+                        {editingConference.brochureUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setEditingConference({ ...editingConference, brochureUrl: '' })}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-rose-400 p-0.5"
+                            title="Clear"
+                          >
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. ABSTRACT */}
+                  <div className="rounded-xl border border-blue-400/20 bg-white/5 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-blue-300 flex items-center gap-1.5">
+                        <FileText size={15} /> Conference Abstract
+                      </span>
+                      {editingConference.abstractUrl ? (
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckCircle2 size={11} /> File Linked
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-white/40">Not set (Auto-generated)</span>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        disabled={uploadingDoc === 'abstract'}
+                        onClick={() => abstractInputRef.current?.click()}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-blue-400/40 bg-blue-400/10 px-4 py-2.5 text-xs font-bold text-blue-300 hover:bg-blue-400/20 hover:border-blue-400 transition"
+                      >
+                        <UploadCloud size={15} />
+                        {uploadingDoc === 'abstract' ? 'Uploading Abstract to Storage...' : 'Upload Abstract (PDF / DOC)'}
+                      </button>
+                      <input
+                        ref={abstractInputRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) handleUploadAbstract(file)
+                          e.target.value = ''
+                        }}
+                      />
+
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={editingConference.abstractUrl || ''}
+                          onChange={(e) => setEditingConference({ ...editingConference, abstractUrl: e.target.value })}
+                          placeholder="Or paste external Abstract/Template URL..."
+                          className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white placeholder-white/30 outline-none focus:border-gold font-mono pr-7"
+                        />
+                        {editingConference.abstractUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setEditingConference({ ...editingConference, abstractUrl: '' })}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-rose-400 p-0.5"
+                            title="Clear"
+                          >
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* COVER IMAGE */}
