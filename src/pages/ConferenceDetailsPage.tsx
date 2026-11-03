@@ -66,8 +66,9 @@ export default function ConferenceDetailsPage({
     syncConference()
     window.addEventListener('origin:data-updated', syncConference)
 
-    // Direct single query for guaranteed instant hydration of theme, sessions, and about
-    if (isSupabaseConfigured && supabase) {
+    // Direct single query fallback if theme or sessions are not yet hydrated
+    const needsHydration = !currentConf.theme || !currentConf.sessions || !currentConf.description
+    if (needsHydration && isSupabaseConfigured && supabase) {
       supabase
         .from('conferences')
         .select('*')
@@ -84,7 +85,7 @@ export default function ConferenceDetailsPage({
               date: data.date,
               location: data.location,
               description: cleanDesc || data.description || '',
-              image: data.image,
+              image: data.image || prev.image,
               href: data.href || '#',
               theme: data.theme || metaTheme || '',
               sessions: data.sessions || metaSessions || '',

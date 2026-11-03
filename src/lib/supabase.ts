@@ -196,6 +196,8 @@ let memoryConferences: Conference[] | null =
   Array.isArray(initialFastConfs) && initialFastConfs.length > 0 ? initialFastConfs : null
 let memoryEvents: UpcomingEvent[] | null = getLocalItem<UpcomingEvent[] | null>(LOCAL_EVENTS_KEY, null)
 let inflightConferences: Promise<Conference[]> | null = null
+let lastFetchTime = 0
+const CONFERENCES_TTL_MS = 5 * 60 * 1000 // 5-minute memory cache to prevent egress overages
 
 // Hydrate full-res conferences from IndexedDB in ~5ms on module load
 if (typeof window !== 'undefined') {
@@ -262,48 +264,24 @@ export function getCachedUpcomingEvents(): UpcomingEvent[] {
   return []
 }
 
-export async function getConferences(): Promise<Conference[]> {
+export async function getConferences(forceRefresh = false): Promise<Conference[]> {
   const localConfs = memoryConferences || getLocalItem<Conference[]>(FAST_CONFS_KEY, defaultConferences)
   if (!supabase) {
     memoryConferences = localConfs
     return localConfs
   }
+
+  // If cached in memory within 5-minute TTL, return immediately without network egress
+  if (!forceRefresh && memoryConferences && memoryConferences.length > 0 && (Date.now() - lastFetchTime < CONFERENCES_TTL_MS)) {
+    return memoryConferences
+  }
+
   if (inflightConferences) {
     return inflightConferences
   }
   inflightConferences = (async () => {
     try {
-      // Stage 1: If no cache in memory yet, fetch lightweight card fields including text (theme, sessions, description)
-      if (!memoryConferences || memoryConferences.length === 0) {
-        const { data: fastData, error: fastErr } = await supabase
-          .from('conferences')
-          .select('id, title, category, date, location, image, href, display_order, theme, sessions, description')
-          .order('display_order', { ascending: true })
-
-        if (!fastErr && fastData && fastData.length > 0) {
-          const quickList: Conference[] = fastData.map((item: any) => {
-            const { description: cleanDesc, theme: metaTheme, sessions: metaSessions } = unpackConferenceData(item.description)
-            return {
-              id: item.id,
-              title: item.title,
-              category: item.category,
-              date: item.date,
-              location: item.location,
-              description: cleanDesc || item.description || '',
-              image: item.image,
-              href: item.href || '#',
-              theme: item.theme || metaTheme || '',
-              sessions: item.sessions || metaSessions || '',
-              images: [],
-            }
-          })
-          memoryConferences = quickList
-          saveFastConferencesCache(quickList)
-          notifyDataChanged()
-        }
-      }
-
-      // Stage 2: Fetch full conference details (including gallery images) in background
+      // Single optimized query for conferences
       const { data, error } = await supabase
         .from('conferences')
         .select('*')
@@ -354,6 +332,7 @@ export async function getConferences(): Promise<Conference[]> {
         }
       })
       memoryConferences = list
+      lastFetchTime = Date.now()
       saveFastConferencesCache(list)
       notifyDataChanged()
       return list
@@ -607,6 +586,7 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
     }
 
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -629,6 +609,7 @@ export async function deleteConference(id: string): Promise<{ success: boolean; 
   try {
     const { error } = await supabase.from('conferences').delete().eq('id', id)
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -651,6 +632,7 @@ export async function upsertUpcomingEvent(evt: Partial<UpcomingEvent> & { id: st
       }, { onConflict: 'id' })
 
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -669,6 +651,7 @@ export async function deleteUpcomingEvent(id: string): Promise<{ success: boolea
   try {
     const { error } = await supabase.from('upcoming_events').delete().eq('id', id)
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -692,6 +675,7 @@ export async function upsertTestimonial(t: Partial<Testimonial> & { id: string }
       }, { onConflict: 'id' })
 
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -710,6 +694,7 @@ export async function deleteTestimonial(id: string): Promise<{ success: boolean;
   try {
     const { error } = await supabase.from('testimonials').delete().eq('id', id)
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -726,6 +711,7 @@ export async function updateStatistic(label: string, value: number, suffix: stri
       .eq('label', label)
 
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -750,6 +736,7 @@ export async function upsertSpeaker(sp: Partial<Speaker> & { id: string }): Prom
       }, { onConflict: 'id' })
 
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -768,6 +755,7 @@ export async function deleteSpeaker(id: string): Promise<{ success: boolean; err
   try {
     const { error } = await supabase.from('speakers').delete().eq('id', id)
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -790,6 +778,7 @@ export async function upsertGalleryItem(item: Partial<GalleryItem> & { id?: stri
       }, { onConflict: 'id' })
 
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -808,6 +797,7 @@ export async function deleteGalleryItem(idOrSrc: string): Promise<{ success: boo
   try {
     const { error } = await supabase.from('gallery_items').delete().or(`id.eq.${idOrSrc},src.eq.${idOrSrc}`)
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -911,6 +901,7 @@ export async function submitContactInquiry(inquiry: ContactInquiryInput): Promis
       .insert([inquiry])
 
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
@@ -971,6 +962,7 @@ export async function submitEventRegistration(reg: EventRegistrationInput): Prom
       .insert([reg])
 
     if (error) return { success: false, error: error.message }
+    lastFetchTime = 0
     notifyDataChanged()
     return { success: true }
   } catch (err: any) {
