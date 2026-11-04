@@ -112,6 +112,11 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
   const brochureInputRef = useRef<HTMLInputElement>(null)
   const abstractInputRef = useRef<HTMLInputElement>(null)
 
+  // Speaker drag & drop image upload state
+  const [isDraggingSpeakerImage, setIsDraggingSpeakerImage] = useState(false)
+  const [speakerImageProcessing, setSpeakerImageProcessing] = useState(false)
+  const speakerFileInputRef = useRef<HTMLInputElement>(null)
+
   async function handleUploadBrochure(file: File) {
     if (!file) return
     try {
@@ -218,6 +223,29 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
       showToast('Failed to process image: ' + err.message, 'error')
     } finally {
       setImageProcessing(false)
+    }
+  }
+
+  async function handleDropSpeakerImage(file: File) {
+    if (!file || !file.type.startsWith('image/')) {
+      showToast('Please select a valid image file (PNG, JPG, WEBP, GIF)', 'error')
+      return
+    }
+    try {
+      setSpeakerImageProcessing(true)
+      const processedUrl = await processImageFile(file)
+      // Upload to Supabase Storage bucket for CDN delivery and low database egress
+      const cdnUrl = await uploadConferenceImage(processedUrl, `${editingSpeaker?.id || 'speaker'}-avatar`)
+      const finalUrl = cdnUrl || processedUrl
+
+      if (editingSpeaker) {
+        setEditingSpeaker({ ...editingSpeaker, image: finalUrl })
+      }
+      showToast('Speaker photo updated and saved to CDN!')
+    } catch (err: any) {
+      showToast('Failed to process image: ' + err.message, 'error')
+    } finally {
+      setSpeakerImageProcessing(false)
     }
   }
 
@@ -868,11 +896,11 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                   <button
                     onClick={() => setEditingSpeaker({
                       name: '',
+                      bio: '',
+                      image: '',
                       role: 'Keynote Speaker',
                       organization: '',
                       topic: '',
-                      bio: '',
-                      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=70',
                       linkedin: '#'
                     })}
                     className="btn btn-gold flex items-center gap-2 text-sm"
@@ -889,13 +917,10 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                           <img src={sp.image} alt={sp.name} className="h-full w-full object-cover" />
                         </div>
                         <h3 className="font-display font-bold text-base text-white">{sp.name}</h3>
-                        <p className="text-xs font-semibold text-gold mt-0.5">{sp.role}</p>
-                        {sp.organization && <p className="text-[11px] text-white/60">{sp.organization}</p>}
-                        {sp.topic && (
-                          <p className="mt-2 text-xs text-white/80 bg-white/5 p-2 rounded-lg line-clamp-2">
-                            <span className="text-[10px] text-gold uppercase block font-bold">Topic</span>
-                            {sp.topic}
-                          </p>
+                        {sp.bio ? (
+                          <p className="mt-1 text-xs text-white/70 line-clamp-3 leading-relaxed">{sp.bio}</p>
+                        ) : (
+                          <p className="mt-1 text-xs text-white/40 italic">No bio provided</p>
                         )}
                       </div>
                       <div className="mt-4 flex items-center justify-end gap-2 border-t border-white/10 pt-3">
@@ -1705,7 +1730,8 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
               <h3 className="text-xl font-bold font-display">{editingSpeaker.id ? 'Edit Speaker' : 'New Keynote Speaker'}</h3>
               <button onClick={() => setEditingSpeaker(null)} className="rounded-lg p-1 hover:bg-white/10"><X size={18} /></button>
             </div>
-            <form onSubmit={handleSaveSpeaker} className="mt-6 space-y-4">
+            <form onSubmit={handleSaveSpeaker} className="mt-6 space-y-5">
+              {/* 1. NAME */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Full Name *</label>
                 <input
@@ -1718,82 +1744,143 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Role / Designation *</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingSpeaker.role || ''}
-                    onChange={(e) => setEditingSpeaker({ ...editingSpeaker, role: e.target.value })}
-                    placeholder="Chief Science Officer"
-                    className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Organization / University</label>
-                  <input
-                    type="text"
-                    value={editingSpeaker.organization || ''}
-                    onChange={(e) => setEditingSpeaker({ ...editingSpeaker, organization: e.target.value })}
-                    placeholder="Acme Health BioTech"
-                    className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
-                  />
-                </div>
-              </div>
-
+              {/* 2. BIO */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Keynote Presentation Topic</label>
-                <input
-                  type="text"
-                  value={editingSpeaker.topic || ''}
-                  onChange={(e) => setEditingSpeaker({ ...editingSpeaker, topic: e.target.value })}
-                  placeholder="e.g. Next-Generation AI & Translational Medicine"
-                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Bio</label>
+                <textarea
+                  rows={4}
+                  value={editingSpeaker.bio || ''}
+                  onChange={(e) => setEditingSpeaker({ ...editingSpeaker, bio: e.target.value })}
+                  placeholder="Enter speaker bio, background, and research achievements..."
+                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold leading-relaxed"
                 />
               </div>
 
+              {/* 3. SPEAKER IMAGE WITH DRAG & DROP */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Speaker Photo URL</label>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5">
+                  Speaker Image
+                </label>
                 <input
-                  type="text"
-                  value={editingSpeaker.image || ''}
-                  onChange={(e) => setEditingSpeaker({ ...editingSpeaker, image: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
+                  ref={speakerFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleDropSpeakerImage(file)
+                    e.target.value = ''
+                  }}
                 />
-                {editingSpeaker.image && (
-                  <div className="mt-2 h-20 w-20 overflow-hidden rounded-full border border-white/20">
-                    <img src={editingSpeaker.image} alt="Avatar preview" className="h-full w-full object-cover" />
+
+                {editingSpeaker.image ? (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setIsDraggingSpeakerImage(true)
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault()
+                      setIsDraggingSpeakerImage(false)
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      setIsDraggingSpeakerImage(false)
+                      const file = e.dataTransfer.files?.[0]
+                      if (file) handleDropSpeakerImage(file)
+                    }}
+                    className={`relative group overflow-hidden rounded-2xl border bg-white/5 p-4 transition-all ${
+                      isDraggingSpeakerImage ? 'border-gold bg-gold/15' : 'border-white/20'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-2xl border border-white/20 bg-navy-950 shadow-md">
+                        <img
+                          src={editingSpeaker.image}
+                          alt="Speaker Avatar Preview"
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => speakerFileInputRef.current?.click()}
+                            className="rounded-full bg-gold p-2 text-navy-950 hover:bg-gold-light transition shadow-lg"
+                            title="Replace Image"
+                          >
+                            <UploadCloud size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 text-center sm:text-left">
+                        <p className="text-xs font-semibold text-white flex items-center justify-center sm:justify-start gap-1.5">
+                          <CheckCircle2 size={14} className="text-emerald-400" />
+                          Photo loaded on CDN
+                        </p>
+                        <p className="text-xs text-white/50 mt-1">
+                          Drag and drop another photo here to replace, or use the buttons below.
+                        </p>
+                        <div className="mt-3 flex items-center justify-center sm:justify-start gap-2">
+                          <button
+                            type="button"
+                            onClick={() => speakerFileInputRef.current?.click()}
+                            className="rounded-lg bg-gold/20 hover:bg-gold/30 border border-gold/40 px-3 py-1.5 text-xs font-bold text-gold transition flex items-center gap-1.5"
+                          >
+                            <UploadCloud size={13} /> Replace Image
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingSpeaker({ ...editingSpeaker, image: '' })}
+                            className="rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/30 px-3 py-1.5 text-xs font-bold text-rose-300 transition flex items-center gap-1.5"
+                          >
+                            <Trash2 size={13} /> Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setIsDraggingSpeakerImage(true)
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault()
+                      setIsDraggingSpeakerImage(false)
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      setIsDraggingSpeakerImage(false)
+                      const file = e.dataTransfer.files?.[0]
+                      if (file) handleDropSpeakerImage(file)
+                    }}
+                    onClick={() => speakerFileInputRef.current?.click()}
+                    className={`group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer ${
+                      isDraggingSpeakerImage
+                        ? 'border-gold bg-gold/15 scale-[1.01]'
+                        : 'border-white/20 bg-white/5 hover:border-gold/60 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="grid h-14 w-14 place-items-center rounded-full bg-gold/10 text-gold group-hover:scale-110 transition-transform mb-3">
+                      <UploadCloud size={28} />
+                    </div>
+                    <p className="text-sm font-semibold text-white">
+                      {speakerImageProcessing ? 'Processing & uploading image...' : 'Drag and drop speaker image here'}
+                    </p>
+                    <p className="mt-1 text-xs text-white/50">
+                      or <span className="text-gold underline font-medium">browse files</span> from your computer
+                    </p>
+                    <p className="mt-2 text-[11px] text-white/40">
+                      PNG, JPG, WEBP, or GIF (auto-optimized & uploaded to CDN)
+                    </p>
                   </div>
                 )}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">LinkedIn Profile Link</label>
-                <input
-                  type="text"
-                  value={editingSpeaker.linkedin || ''}
-                  onChange={(e) => setEditingSpeaker({ ...editingSpeaker, linkedin: e.target.value })}
-                  placeholder="https://linkedin.com/in/..."
-                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Brief Bio</label>
-                <textarea
-                  rows={2}
-                  value={editingSpeaker.bio || ''}
-                  onChange={(e) => setEditingSpeaker({ ...editingSpeaker, bio: e.target.value })}
-                  placeholder="Short bio summarizing background and achievements..."
-                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
-                />
-              </div>
-
               <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
                 <button type="button" onClick={() => setEditingSpeaker(null)} className="rounded-full px-5 py-2 text-sm text-white/70 hover:bg-white/10">Cancel</button>
-                <button type="submit" disabled={loading} className="btn btn-gold text-sm">{loading ? 'Publishing...' : 'Save & Publish Live'}</button>
+                <button type="submit" disabled={loading || speakerImageProcessing} className="btn btn-gold text-sm">{loading ? 'Publishing...' : 'Save & Publish Live'}</button>
               </div>
             </form>
           </div>
