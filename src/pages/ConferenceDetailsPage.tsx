@@ -704,15 +704,14 @@ export default function ConferenceDetailsPage({
               <div className="mt-3 h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
             </div>
 
-            <div className={`mt-6 grid gap-4 sm:gap-6 ${
-              middleImages.length === 1
+            <div className={`mt-6 grid gap-4 sm:gap-6 ${middleImages.length === 1
                 ? 'grid-cols-1'
                 : middleImages.length === 2
-                ? 'grid-cols-1 sm:grid-cols-2'
-                : middleImages.length === 3
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-            }`}>
+                  ? 'grid-cols-1 sm:grid-cols-2'
+                  : middleImages.length === 3
+                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+              }`}>
               {middleImages.map((imgUrl, i) => (
                 <div
                   key={i}
@@ -859,13 +858,12 @@ export default function ConferenceDetailsPage({
 
                 {status && (
                   <div
-                    className={`p-4 rounded-xl text-xs sm:text-sm font-medium ${
-                      status.kind === 'ok'
+                    className={`p-4 rounded-xl text-xs sm:text-sm font-medium ${status.kind === 'ok'
                         ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                         : status.kind === 'error'
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                    }`}
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      }`}
                   >
                     {status.msg}
                   </div>
