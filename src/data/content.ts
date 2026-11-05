@@ -146,6 +146,84 @@ export function parseSessionsList(val: string[] | string | undefined | null): st
   return []
 }
 
+export interface PricingTier {
+  id: string
+  name: string
+  price: string
+  earlyBirdPrice?: string
+  category?: string
+  description?: string
+  features: string[]
+  highlight?: boolean
+}
+
+export const defaultPricingTiers: PricingTier[] = [
+  {
+    id: 'tier-speaker',
+    name: 'Speaker Registration',
+    price: '$799',
+    earlyBirdPrice: '$699',
+    category: 'Speaker',
+    description: 'For oral & poster presenters delivering accepted research.',
+    features: [
+      'Oral / Poster presentation slot',
+      'Access to all scientific tracks & keynotes',
+      'Official Certificate of Recognition & CPD points',
+      'Delegate conference bag & printed handbook',
+      'Networking lunch & refreshment breaks'
+    ],
+    highlight: true
+  },
+  {
+    id: 'tier-delegate',
+    name: 'Delegate Pass',
+    price: '$899',
+    earlyBirdPrice: '$799',
+    category: 'Delegate',
+    description: 'For clinicians, academic faculty, and industry professionals.',
+    features: [
+      'Full access to all keynote & breakout sessions',
+      'Official Certificate of Attendance & CPD points',
+      'Entry to exhibition halls & poster showcase',
+      'Networking lunch & refreshment breaks',
+      'Digital access to conference abstracts'
+    ],
+    highlight: false
+  },
+  {
+    id: 'tier-student',
+    name: 'Student / Young Researcher',
+    price: '$499',
+    earlyBirdPrice: '$399',
+    category: 'Student',
+    description: 'Special academic rate for verified undergraduate, graduate, or PhD students.',
+    features: [
+      'Access to all scientific tracks & sessions',
+      'Student Certificate of Participation',
+      'Poster presentation opportunity',
+      'Delegate materials & digital proceedings',
+      'Networking lunch & refreshment breaks'
+    ],
+    highlight: false
+  },
+  {
+    id: 'tier-virtual',
+    name: 'Virtual Attendee',
+    price: '$399',
+    earlyBirdPrice: '$299',
+    category: 'Virtual',
+    description: 'Live interactive online attendance from anywhere in the world.',
+    features: [
+      'HD live stream of all scientific tracks',
+      'Interactive live Q&A with speakers',
+      'Digital Certificate of Participation',
+      'Online abstract book & proceedings download',
+      '30-day on-demand recorded session access'
+    ],
+    highlight: false
+  }
+]
+
 export interface Conference {
   id: string
   title: string
@@ -160,6 +238,7 @@ export interface Conference {
   images?: string[]
   brochureUrl?: string
   abstractUrl?: string
+  pricing?: PricingTier[] | string
 }
 export const conferences: Conference[] = []
 

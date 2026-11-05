@@ -6,11 +6,13 @@ import {
   stats as defaultStats,
   speakers as defaultSpeakers,
   gallery as defaultGallery,
+  defaultPricingTiers,
   type Conference,
   type UpcomingEvent,
   type Testimonial,
   type Speaker,
   type GalleryItem,
+  type PricingTier,
 } from '../data/content'
 
 const rawUrl = (
@@ -125,6 +127,7 @@ const LOCAL_EVENTS_KEY = 'origin_events_v3_local'
 const LOCAL_SPEAKERS_KEY = 'origin_speakers_local'
 const LOCAL_TESTIMONIALS_KEY = 'origin_testimonials_local'
 const LOCAL_GALLERY_KEY = 'origin_gallery_v2_local'
+const LOCAL_GLOBAL_PRICING_KEY = 'origin_global_pricing_v1'
 
 // Purge legacy stale keys that could hold empty themes/sessions or outdated cards
 if (typeof window !== 'undefined') {
@@ -292,14 +295,21 @@ if (typeof window !== 'undefined') {
 // ==========================================
 // RESILIENT DATA PACKERS / UNPACKERS
 // ==========================================
-// Persists theme, sessions, images, brochure, and abstract even if individual columns are missing in Supabase
+// Persists theme, sessions, images, brochure, abstract, and pricing even if individual columns are missing in Supabase
 export function unpackConferenceData(desc: string | undefined | null) {
-  if (!desc) return { description: '', theme: '', sessions: '', images: [] as string[], brochureUrl: '', abstractUrl: '' }
+  if (!desc) return { description: '', theme: '', sessions: '', images: [] as string[], brochureUrl: '', abstractUrl: '', pricing: undefined as PricingTier[] | undefined }
   const match = desc.match(/<!--ORIGIN_DATA:([\s\S]*?)-->/)
-  if (!match) return { description: desc, theme: '', sessions: '', images: [] as string[], brochureUrl: '', abstractUrl: '' }
+  if (!match) return { description: desc, theme: '', sessions: '', images: [] as string[], brochureUrl: '', abstractUrl: '', pricing: undefined as PricingTier[] | undefined }
   try {
     const meta = JSON.parse(match[1])
     const cleanDesc = desc.replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '').trim()
+    let parsedPricing: PricingTier[] | undefined = undefined
+    if (Array.isArray(meta.pricing) && meta.pricing.length > 0) {
+      parsedPricing = meta.pricing
+    } else if (typeof meta.pricing === 'string' && meta.pricing.trim()) {
+      try { parsedPricing = JSON.parse(meta.pricing) } catch {}
+    }
+
     return {
       description: cleanDesc,
       theme: typeof meta.theme === 'string' ? meta.theme : '',
@@ -307,25 +317,66 @@ export function unpackConferenceData(desc: string | undefined | null) {
       images: Array.isArray(meta.images) ? (meta.images as string[]) : ([] as string[]),
       brochureUrl: typeof meta.brochureUrl === 'string' ? meta.brochureUrl : (typeof meta.brochure === 'string' ? meta.brochure : ''),
       abstractUrl: typeof meta.abstractUrl === 'string' ? meta.abstractUrl : (typeof meta.abstract === 'string' ? meta.abstract : ''),
+      pricing: parsedPricing,
     }
   } catch {
-    return { description: desc, theme: '', sessions: '', images: [] as string[], brochureUrl: '', abstractUrl: '' }
+    return { description: desc, theme: '', sessions: '', images: [] as string[], brochureUrl: '', abstractUrl: '', pricing: undefined as PricingTier[] | undefined }
   }
 }
 
-export function packConferenceData(desc: string, meta: { theme?: string; sessions?: string; images?: string[]; brochureUrl?: string; abstractUrl?: string }): string {
+export function packConferenceData(desc: string, meta: {
+  theme?: string
+  sessions?: string
+  images?: string[]
+  brochureUrl?: string
+  abstractUrl?: string
+  pricing?: PricingTier[] | string
+}): string {
   const clean = (desc || '').replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '').trim()
-  const payload = {
+  const payload: Record<string, any> = {
     theme: meta.theme || '',
     sessions: meta.sessions || '',
     images: Array.isArray(meta.images) ? meta.images : [],
     brochureUrl: meta.brochureUrl || '',
     abstractUrl: meta.abstractUrl || ''
   }
-  if (!payload.theme && !payload.sessions && payload.images.length === 0 && !payload.brochureUrl && !payload.abstractUrl) {
+  if (meta.pricing) {
+    payload.pricing = meta.pricing
+  }
+
+  if (!payload.theme && !payload.sessions && payload.images.length === 0 && !payload.brochureUrl && !payload.abstractUrl && !payload.pricing) {
     return clean
   }
   return `${clean}\n\n<!--ORIGIN_DATA:${JSON.stringify(payload)}-->`
+}
+
+// Global Pricing Tiers helper
+export function getGlobalPricingTiers(): PricingTier[] {
+  return getLocalItem<PricingTier[]>(LOCAL_GLOBAL_PRICING_KEY, defaultPricingTiers)
+}
+
+export function saveGlobalPricingTiers(tiers: PricingTier[]): void {
+  setLocalItem(LOCAL_GLOBAL_PRICING_KEY, tiers)
+  notifyDataChanged()
+}
+
+export async function applyPricingToAllConferences(tiers: PricingTier[]): Promise<{ success: boolean; error?: string }> {
+  saveGlobalPricingTiers(tiers)
+  try {
+    const confs = await getConferences()
+    if (Array.isArray(confs) && confs.length > 0) {
+      for (const c of confs) {
+        await upsertConference({
+          ...c,
+          pricing: tiers
+        })
+      }
+    }
+    notifyDataChanged()
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to apply pricing to all conferences' }
+  }
 }
 
 // ==========================================
@@ -380,12 +431,13 @@ export async function getConferences(forceRefresh = false): Promise<Conference[]
       const list = data.map((item) => {
         const localMatch = localConfs.find((c) => c.id === item.id)
         const defaultMatch = defaultConferences.find((c) => c.id === item.id)
-        const { description: cleanDesc, theme: metaTheme, sessions: metaSessions, images: metaImages, brochureUrl: metaBrochure, abstractUrl: metaAbstract } = unpackConferenceData(item.description)
+        const { description: cleanDesc, theme: metaTheme, sessions: metaSessions, images: metaImages, brochureUrl: metaBrochure, abstractUrl: metaAbstract, pricing: metaPricing } = unpackConferenceData(item.description)
 
         const theme = item.theme || metaTheme || localMatch?.theme || defaultMatch?.theme || ''
         const sessions = item.sessions || metaSessions || localMatch?.sessions || defaultMatch?.sessions || ''
         const brochureUrl = item.brochure_url || item.brochureUrl || metaBrochure || localMatch?.brochureUrl || defaultMatch?.brochureUrl || ''
         const abstractUrl = item.abstract_url || item.abstractUrl || metaAbstract || localMatch?.abstractUrl || defaultMatch?.abstractUrl || ''
+        const pricing = item.pricing || metaPricing || localMatch?.pricing || getGlobalPricingTiers()
 
         let images: string[] = []
         if (Array.isArray(item.images) && item.images.length > 0) {
@@ -417,6 +469,7 @@ export async function getConferences(forceRefresh = false): Promise<Conference[]
           images,
           brochureUrl,
           abstractUrl,
+          pricing,
         }
       })
       memoryConferences = list
@@ -597,11 +650,12 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
   const images = conf.images !== undefined ? conf.images : (existingItem?.images || [])
   const brochureUrl = conf.brochureUrl !== undefined ? conf.brochureUrl : (existingItem?.brochureUrl || '')
   const abstractUrl = conf.abstractUrl !== undefined ? conf.abstractUrl : (existingItem?.abstractUrl || '')
+  const pricing = conf.pricing !== undefined ? conf.pricing : (existingItem?.pricing || getGlobalPricingTiers())
   const cleanDescription = (conf.description !== undefined ? conf.description : (existingItem?.description || ''))
     .replace(/<!--ORIGIN_DATA:[\s\S]*?-->/, '')
     .trim()
 
-  const packedDescription = packConferenceData(cleanDescription, { theme, sessions, images, brochureUrl, abstractUrl })
+  const packedDescription = packConferenceData(cleanDescription, { theme, sessions, images, brochureUrl, abstractUrl, pricing })
 
   const newItem: Conference = {
     id: conf.id,
@@ -617,6 +671,7 @@ export async function upsertConference(conf: Partial<Conference> & { id: string 
     images,
     brochureUrl,
     abstractUrl,
+    pricing,
   }
 
   if (idx >= 0) {

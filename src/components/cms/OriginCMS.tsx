@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import {
   X, Plus, Edit2, Trash2, CheckCircle2, AlertCircle, RefreshCw,
   Layers, Calendar, MessageSquareQuote, BarChart3, Mail, Users, FileText,
-  Download, Eye, ShieldCheck, Mic, Image as ImageIcon, UploadCloud
+  Download, Eye, ShieldCheck, Mic, Image as ImageIcon, UploadCloud,
+  Tag, Sparkles, Check
 } from 'lucide-react'
 import {
   getConferences, upsertConference, deleteConference,
@@ -12,7 +13,8 @@ import {
   getSpeakers, upsertSpeaker, deleteSpeaker,
   getGallery, upsertGalleryItem, deleteGalleryItem,
   getNewsletterSubscribers, getEventRegistrations, getContactInquiries,
-  isSupabaseConfigured, unpackConferenceData, uploadConferenceImage, uploadConferenceDocument
+  isSupabaseConfigured, unpackConferenceData, uploadConferenceImage, uploadConferenceDocument,
+  getGlobalPricingTiers, saveGlobalPricingTiers, applyPricingToAllConferences
 } from '../../lib/supabase'
 import {
   categories,
@@ -22,13 +24,15 @@ import {
   type UpcomingEvent,
   type Testimonial,
   type Speaker,
-  type GalleryItem
+  type GalleryItem,
+  type PricingTier
 } from '../../data/content'
 
 type Tab =
   | 'conferences'
   | 'events'
   | 'speakers'
+  | 'pricing'
   | 'gallery'
   | 'testimonials'
   | 'stats'
@@ -116,6 +120,13 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
   const [isDraggingSpeakerImage, setIsDraggingSpeakerImage] = useState(false)
   const [speakerImageProcessing, setSpeakerImageProcessing] = useState(false)
   const speakerFileInputRef = useRef<HTMLInputElement>(null)
+
+  // Registration Pricing state
+  const [globalPricingTiers, setGlobalPricingTiers] = useState<PricingTier[]>(() => getGlobalPricingTiers())
+  const [selectedPricingConfId, setSelectedPricingConfId] = useState<string>('global')
+  const [editingTier, setEditingTier] = useState<Partial<PricingTier> | null>(null)
+  const [newTierFeature, setNewTierFeature] = useState('')
+  const [savingPricing, setSavingPricing] = useState(false)
 
   async function handleUploadBrochure(file: File) {
     if (!file) return
@@ -246,6 +257,104 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
       showToast('Failed to process image: ' + err.message, 'error')
     } finally {
       setSpeakerImageProcessing(false)
+    }
+  }
+
+  // Pricing helpers
+  function getActivePricingTiers(): PricingTier[] {
+    if (selectedPricingConfId === 'global') {
+      return globalPricingTiers
+    }
+    const conf = conferences.find((c) => c.id === selectedPricingConfId)
+    if (conf && conf.pricing) {
+      if (Array.isArray(conf.pricing)) return conf.pricing
+      if (typeof conf.pricing === 'string') {
+        try { return JSON.parse(conf.pricing) } catch {}
+      }
+    }
+    return globalPricingTiers
+  }
+
+  async function handleSaveTier(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingTier?.name || !editingTier?.price) {
+      showToast('Name and price are required', 'error')
+      return
+    }
+
+    const currentList = getActivePricingTiers()
+    const tierId = editingTier.id || 'tier_' + Date.now().toString(36)
+    const newTier: PricingTier = {
+      id: tierId,
+      name: editingTier.name.trim(),
+      price: editingTier.price.trim(),
+      earlyBirdPrice: (editingTier.earlyBirdPrice || '').trim() || undefined,
+      category: (editingTier.category || 'Delegate').trim(),
+      description: (editingTier.description || '').trim(),
+      features: Array.isArray(editingTier.features) ? editingTier.features : [],
+      highlight: Boolean(editingTier.highlight)
+    }
+
+    const idx = currentList.findIndex((t) => t.id === tierId)
+    const updatedList = idx >= 0
+      ? currentList.map((t, i) => (i === idx ? newTier : t))
+      : [...currentList, newTier]
+
+    if (selectedPricingConfId === 'global') {
+      setGlobalPricingTiers(updatedList)
+      saveGlobalPricingTiers(updatedList)
+      showToast('Global pricing tier updated!')
+    } else {
+      const conf = conferences.find((c) => c.id === selectedPricingConfId)
+      if (conf) {
+        setSavingPricing(true)
+        await upsertConference({
+          ...conf,
+          pricing: updatedList
+        })
+        setSavingPricing(false)
+        showToast(`Pricing updated for ${conf.title}!`)
+        loadData()
+      }
+    }
+    setEditingTier(null)
+    setNewTierFeature('')
+  }
+
+  async function handleDeleteTier(id: string) {
+    if (!confirm('Are you sure you want to delete this pricing tier?')) return
+    const currentList = getActivePricingTiers()
+    const updatedList = currentList.filter((t) => t.id !== id)
+
+    if (selectedPricingConfId === 'global') {
+      setGlobalPricingTiers(updatedList)
+      saveGlobalPricingTiers(updatedList)
+      showToast('Pricing tier removed from global list!')
+    } else {
+      const conf = conferences.find((c) => c.id === selectedPricingConfId)
+      if (conf) {
+        setSavingPricing(true)
+        await upsertConference({
+          ...conf,
+          pricing: updatedList
+        })
+        setSavingPricing(false)
+        showToast('Pricing tier removed!')
+        loadData()
+      }
+    }
+  }
+
+  async function handleApplyGlobalPricingToAll() {
+    if (!confirm('This will apply the current global pricing tiers to ALL conferences. Continue?')) return
+    setSavingPricing(true)
+    const res = await applyPricingToAllConferences(globalPricingTiers)
+    setSavingPricing(false)
+    if (res.success) {
+      showToast('Successfully applied registration pricing to all conferences!')
+      loadData()
+    } else {
+      showToast('Error applying pricing: ' + res.error, 'error')
     }
   }
 
@@ -673,6 +782,15 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                 <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{speakers.length}</span>
               </button>
 
+              {/* REGISTRATION PRICING TAB */}
+              <button
+                onClick={() => setActiveTab('pricing')}
+                className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${activeTab === 'pricing' ? 'bg-gold text-navy-950 font-semibold' : 'text-white/80 hover:bg-white/5'}`}
+              >
+                <span className="flex items-center gap-2.5"><Tag size={16} /> Registration Fees</span>
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">{getActivePricingTiers().length}</span>
+              </button>
+
               {/* NEW: GALLERY TAB */}
               <button
                 onClick={() => setActiveTab('gallery')}
@@ -933,6 +1051,153 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                         <button
                           onClick={() => handleDeleteSpeaker(sp.id)}
                           className="flex items-center gap-1 rounded-lg bg-rose-500/20 px-3 py-1.5 text-xs text-rose-300 hover:bg-rose-500/30"
+                        >
+                          <Trash2 size={13} /> Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3B. REGISTRATION PRICING & FEES TAB */}
+            {activeTab === 'pricing' && (
+              <div className="space-y-6 w-full">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="font-display text-2xl font-bold flex items-center gap-2.5">
+                      <Tag className="text-gold" size={24} /> Registration Pricing &amp; Fees
+                    </h2>
+                    <p className="text-sm text-white/60">
+                      Configure delegate pass fees, early bird discounts, and perks displayed on conference pages.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <button
+                      onClick={handleApplyGlobalPricingToAll}
+                      disabled={savingPricing}
+                      className="rounded-xl border border-gold/40 bg-gold/15 px-4 py-2.5 text-xs font-bold text-gold hover:bg-gold/25 transition flex items-center gap-1.5 shadow"
+                      title="Push this pricing table to every single conference"
+                    >
+                      <Sparkles size={14} />
+                      <span>{savingPricing ? 'Applying...' : 'Apply to All Conferences'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => setEditingTier({
+                        name: '',
+                        price: '$799',
+                        earlyBirdPrice: '$699',
+                        category: 'Delegate',
+                        description: '',
+                        features: ['Access to all scientific tracks & keynotes', 'Official Certificate of Attendance & CPD points', 'Networking lunch & refreshment breaks'],
+                        highlight: false
+                      })}
+                      className="btn btn-gold flex items-center gap-2 text-xs font-bold py-2.5 px-4"
+                    >
+                      <Plus size={15} /> Add Pricing Tier
+                    </button>
+                  </div>
+                </div>
+
+                {/* Conference Selector Banner */}
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="text-xs text-white/70">
+                    <span className="font-semibold text-white">Target Scope: </span>
+                    {selectedPricingConfId === 'global' ? (
+                      <span className="text-gold font-bold">Global Master Pricing (Standard across all conferences)</span>
+                    ) : (
+                      <span>Custom pricing for: <strong className="text-gold">{conferences.find(c => c.id === selectedPricingConfId)?.title}</strong></span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <label className="text-xs text-white/50 whitespace-nowrap">Scope:</label>
+                    <select
+                      value={selectedPricingConfId}
+                      onChange={(e) => setSelectedPricingConfId(e.target.value)}
+                      className="w-full sm:w-64 rounded-xl border border-white/20 bg-navy-950 px-3 py-2 text-xs text-white outline-none focus:border-gold"
+                    >
+                      <option value="global">🌐 Master Global Pricing (All)</option>
+                      {conferences.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          📌 {c.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Pricing Tiers Grid */}
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  {getActivePricingTiers().map((tier) => (
+                    <div
+                      key={tier.id}
+                      className={`relative flex flex-col justify-between rounded-2xl border p-5 transition backdrop-blur-md ${
+                        tier.highlight
+                          ? 'border-gold bg-gradient-to-b from-gold/[0.12] via-white/5 to-white/5 shadow-[0_0_30px_rgba(217,119,6,0.15)]'
+                          : 'border-white/10 bg-white/5 hover:border-white/25'
+                      }`}
+                    >
+                      {tier.highlight && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gold px-3 py-0.5 text-[10px] font-bold text-navy-950 shadow uppercase tracking-wider">
+                          ★ Most Popular
+                        </div>
+                      )}
+
+                      <div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gold">
+                            {tier.category || 'Pass'}
+                          </span>
+                        </div>
+
+                        <h3 className="mt-3 font-display text-lg font-bold text-white">
+                          {tier.name}
+                        </h3>
+
+                        <div className="mt-3 flex items-baseline gap-2">
+                          <span className="font-display text-3xl font-extrabold text-white">
+                            {tier.price}
+                          </span>
+                          {tier.earlyBirdPrice && (
+                            <span className="text-xs font-semibold text-emerald-400">
+                              (Early Bird: {tier.earlyBirdPrice})
+                            </span>
+                          )}
+                        </div>
+
+                        {tier.description && (
+                          <p className="mt-2 text-xs text-white/60 leading-relaxed">
+                            {tier.description}
+                          </p>
+                        )}
+
+                        <div className="mt-4 space-y-2 border-t border-white/10 pt-4">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Includes:</p>
+                          <ul className="space-y-1.5 text-xs text-white/80">
+                            {(tier.features || []).map((feat, idx) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <Check size={13} className="text-gold mt-0.5 flex-shrink-0" />
+                                <span>{feat}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex items-center justify-end gap-2 border-t border-white/10 pt-3">
+                        <button
+                          onClick={() => setEditingTier({ ...tier })}
+                          className="flex items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/20 transition"
+                        >
+                          <Edit2 size={13} /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTier(tier.id)}
+                          className="flex items-center gap-1 rounded-lg bg-rose-500/20 px-3 py-1.5 text-xs text-rose-300 hover:bg-rose-500/30 transition"
                         >
                           <Trash2 size={13} /> Delete
                         </button>
@@ -2090,6 +2355,162 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
               <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
                 <button type="button" onClick={() => setEditingTestimonial(null)} className="rounded-full px-5 py-2 text-sm text-white/70 hover:bg-white/10">Cancel</button>
                 <button type="submit" disabled={loading} className="btn btn-gold text-sm">{loading ? 'Publishing...' : 'Save & Publish Live'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Tier Edit Modal */}
+      {editingTier && (
+        <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl bg-navy-900 border border-white/15 p-6 text-white shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <h3 className="text-xl font-bold font-display">
+                {editingTier.id ? 'Edit Pricing Tier' : 'New Registration Pricing Tier'}
+              </h3>
+              <button onClick={() => setEditingTier(null)} className="rounded-lg p-1 hover:bg-white/10"><X size={18} /></button>
+            </div>
+            <form onSubmit={handleSaveTier} className="mt-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Pass / Tier Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingTier.name || ''}
+                  onChange={(e) => setEditingTier({ ...editingTier, name: e.target.value })}
+                  placeholder="e.g. Speaker Registration"
+                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Standard Fee *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingTier.price || ''}
+                    onChange={(e) => setEditingTier({ ...editingTier, price: e.target.value })}
+                    placeholder="e.g. $799 or €750"
+                    className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Early Bird Fee (optional)</label>
+                  <input
+                    type="text"
+                    value={editingTier.earlyBirdPrice || ''}
+                    onChange={(e) => setEditingTier({ ...editingTier, earlyBirdPrice: e.target.value })}
+                    placeholder="e.g. $699"
+                    className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Category / Audience Type</label>
+                <input
+                  type="text"
+                  value={editingTier.category || ''}
+                  onChange={(e) => setEditingTier({ ...editingTier, category: e.target.value })}
+                  placeholder="e.g. Speaker, Delegate, Student, Virtual"
+                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Short Description</label>
+                <input
+                  type="text"
+                  value={editingTier.description || ''}
+                  onChange={(e) => setEditingTier({ ...editingTier, description: e.target.value })}
+                  placeholder="e.g. For oral and poster presenters sharing peer-reviewed research."
+                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
+                />
+              </div>
+
+              {/* Features / Perks List */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60 mb-1.5">
+                  Included Features &amp; Perks ({editingTier.features?.length || 0})
+                </label>
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {(editingTier.features || []).map((feat, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs">
+                      <span className="flex items-center gap-2">
+                        <Check size={12} className="text-gold" />
+                        <span>{feat}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = (editingTier.features || []).filter((_, i) => i !== idx)
+                          setEditingTier({ ...editingTier, features: updated })
+                        }}
+                        className="text-rose-400 hover:text-rose-300 p-1"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-2.5 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newTierFeature}
+                    onChange={(e) => setNewTierFeature(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        if (newTierFeature.trim()) {
+                          setEditingTier({
+                            ...editingTier,
+                            features: [...(editingTier.features || []), newTierFeature.trim()]
+                          })
+                          setNewTierFeature('')
+                        }
+                      }
+                    }}
+                    placeholder="Type perk and click Add..."
+                    className="flex-1 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs text-white outline-none focus:border-gold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newTierFeature.trim()) {
+                        setEditingTier({
+                          ...editingTier,
+                          features: [...(editingTier.features || []), newTierFeature.trim()]
+                        })
+                        setNewTierFeature('')
+                      }
+                    }}
+                    className="rounded-xl bg-white/15 px-3 py-2 text-xs font-semibold text-white hover:bg-white/25 transition"
+                  >
+                    + Add Perk
+                  </button>
+                </div>
+              </div>
+
+              {/* Highlight toggle */}
+              <div className="flex items-center gap-3 pt-2">
+                <input
+                  type="checkbox"
+                  id="tier-highlight-check"
+                  checked={Boolean(editingTier.highlight)}
+                  onChange={(e) => setEditingTier({ ...editingTier, highlight: e.target.checked })}
+                  className="h-4 w-4 rounded accent-gold"
+                />
+                <label htmlFor="tier-highlight-check" className="text-xs text-white/80 cursor-pointer">
+                  Mark as Recommended / Highlighted Tier
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                <button type="button" onClick={() => setEditingTier(null)} className="rounded-full px-5 py-2 text-sm text-white/70 hover:bg-white/10">Cancel</button>
+                <button type="submit" className="btn btn-gold text-sm font-bold">Save Tier</button>
               </div>
             </form>
           </div>

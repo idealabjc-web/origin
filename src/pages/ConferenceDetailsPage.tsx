@@ -5,10 +5,10 @@ import {
   Share2, Ticket, ChevronRight,
   Layers, Send, X, Maximize2,
   BookOpen, Quote, ArrowUpRight, Sparkles,
-  Download, FileText, CheckCircle2, Phone, Mail, User, Loader2
+  Download, FileText, CheckCircle2, Phone, Mail, User, Loader2, Tag
 } from 'lucide-react'
-import { getConferenceTopic, parseSessionsList, type Conference } from '../data/content'
-import { submitEventRegistration, submitContactInquiry, getConferences, getCachedConferences, unpackConferenceData, supabase, isSupabaseConfigured } from '../lib/supabase'
+import { getConferenceTopic, parseSessionsList, type Conference, type PricingTier, defaultPricingTiers } from '../data/content'
+import { submitEventRegistration, submitContactInquiry, getConferences, getCachedConferences, unpackConferenceData, getGlobalPricingTiers, supabase, isSupabaseConfigured } from '../lib/supabase'
 
 interface ConferenceDetailsPageProps {
   conference: Conference
@@ -36,7 +36,7 @@ export default function ConferenceDetailsPage({
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [org, setOrg] = useState('')
-  const [attendanceType, setAttendanceType] = useState<'In-Person' | 'Virtual Hybrid'>('In-Person')
+  const [selectedPassTier, setSelectedPassTier] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<{ kind: 'ok' | 'error' | 'info'; msg: string } | null>(null)
 
@@ -145,6 +145,10 @@ export default function ConferenceDetailsPage({
     : (unpacked.images.length > 0 ? unpacked.images : [])
   const effectiveBrochureUrl = currentConf.brochureUrl || unpacked.brochureUrl || ''
   const effectiveAbstractUrl = currentConf.abstractUrl || unpacked.abstractUrl || ''
+  const rawPricing = currentConf.pricing || unpacked.pricing || getGlobalPricingTiers()
+  const pricingTiers: PricingTier[] = Array.isArray(rawPricing) && rawPricing.length > 0
+    ? rawPricing
+    : (typeof rawPricing === 'string' ? (() => { try { return JSON.parse(rawPricing) } catch { return defaultPricingTiers } })() : defaultPricingTiers)
   const sessions = parseSessionsList(effectiveSessions)
   const middleImages = effectiveImages
   const cleanDescription = (unpacked.description || currentConf.description || '')
@@ -310,7 +314,7 @@ export default function ConferenceDetailsPage({
       full_name: name.trim(),
       email: email.trim(),
       organization: org.trim() || undefined,
-      ticket_type: attendanceType,
+      ticket_type: selectedPassTier || pricingTiers[0]?.name || 'Delegate Pass',
     })
     setSubmitting(false)
 
@@ -465,6 +469,13 @@ export default function ConferenceDetailsPage({
                 >
                   <Ticket size={17} />
                   <span>Register as Delegate</span>
+                </a>
+                <a
+                  href="#pricing"
+                  className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-white/5 px-5 py-3.5 text-xs sm:text-sm font-bold text-white hover:bg-white/15 hover:border-amber-400 transition"
+                >
+                  <Tag size={16} className="text-amber-400" />
+                  <span>Registration Fees</span>
                 </a>
                 <button
                   type="button"
@@ -775,6 +786,106 @@ export default function ConferenceDetailsPage({
           </section>
         )}
 
+        {/* 4.5. REGISTRATION PACKAGES & FEES SECTION */}
+        <section id="pricing" className="scroll-mt-28 w-full rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8 lg:p-10 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+          <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-amber-400 mb-2">
+                <Tag size={15} /> Pass Options &amp; Rates
+              </div>
+              <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl lg:text-4xl">
+                Registration Fees &amp; Packages
+              </h2>
+              <div className="mt-3 h-1.5 w-24 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_rgba(251,191,36,0.5)]" />
+            </div>
+            <p className="text-sm text-slate-300 max-w-md">
+              Select your participation category for <strong className="text-white">{currentConf.title}</strong>. Early bird discounts and official credentials apply.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {pricingTiers.map((tier) => (
+              <div
+                key={tier.id || tier.name}
+                className={`relative flex flex-col justify-between rounded-2xl border p-6 transition duration-300 hover:-translate-y-1 ${
+                  tier.highlight
+                    ? 'border-amber-400/80 bg-gradient-to-b from-amber-500/[0.14] via-slate-900/90 to-navy-950 shadow-[0_0_35px_rgba(245,158,11,0.2)]'
+                    : 'border-white/10 bg-slate-900/90 hover:border-amber-400/40'
+                }`}
+              >
+                {tier.highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-3 py-0.5 text-[10px] font-extrabold text-navy-950 shadow uppercase tracking-wider">
+                    ★ Recommended
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="rounded-full bg-amber-400/15 border border-amber-400/30 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                      {tier.category || 'Pass'}
+                    </span>
+                  </div>
+
+                  <h3 className="mt-3 font-display text-xl font-bold text-white">
+                    {tier.name}
+                  </h3>
+
+                  <div className="mt-4 flex items-baseline gap-2">
+                    <span className="font-display text-3xl sm:text-4xl font-extrabold text-white">
+                      {tier.price}
+                    </span>
+                    {tier.earlyBirdPrice && (
+                      <span className="text-xs font-semibold text-emerald-400">
+                        (Early: {tier.earlyBirdPrice})
+                      </span>
+                    )}
+                  </div>
+
+                  {tier.description && (
+                    <p className="mt-3 text-xs text-slate-300/80 leading-relaxed">
+                      {tier.description}
+                    </p>
+                  )}
+
+                  <div className="mt-5 space-y-2 border-t border-white/10 pt-4">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pass Benefits:</p>
+                    <ul className="space-y-2 text-xs text-slate-200">
+                      {(tier.features || []).map((feat, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle2 size={14} className="text-amber-400 mt-0.5 flex-shrink-0" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedPassTier(tier.name)
+                      const regSection = document.getElementById('register-section')
+                      if (regSection) regSection.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                    className={`w-full py-3 px-4 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 ${
+                      tier.highlight
+                        ? 'btn btn-gold shadow-lg shadow-amber-500/20'
+                        : 'border border-amber-400/50 bg-amber-400/10 text-amber-300 hover:bg-amber-400/20'
+                    }`}
+                  >
+                    <span>Select {tier.name}</span>
+                    <ArrowUpRight size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* 5. DELEGATE REGISTRATION SECTION */}
         <section id="register-section" className="scroll-mt-28 w-full rounded-3xl border border-amber-400/40 bg-gradient-to-b from-slate-900 via-navy-950 to-slate-900 p-6 sm:p-8 lg:p-10 shadow-2xl relative overflow-hidden">
           <div className="pointer-events-none absolute right-0 top-0 h-96 w-96 rounded-full bg-amber-500/10 blur-3xl" />
@@ -843,15 +954,18 @@ export default function ConferenceDetailsPage({
 
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">
-                      Attendance Mode
+                      Selected Registration Pass *
                     </label>
                     <select
-                      value={attendanceType}
-                      onChange={(e) => setAttendanceType(e.target.value as any)}
+                      value={selectedPassTier || pricingTiers[0]?.name || 'Delegate Pass'}
+                      onChange={(e) => setSelectedPassTier(e.target.value)}
                       className="w-full rounded-xl border border-white/20 bg-slate-900 px-4 py-3 text-sm text-white outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition"
                     >
-                      <option value="In-Person">In-Person Congress Pass</option>
-                      <option value="Virtual Hybrid">Virtual Hybrid Pass (Live Stream)</option>
+                      {pricingTiers.map((t) => (
+                        <option key={t.id || t.name} value={t.name}>
+                          {t.name} — {t.price} {t.earlyBirdPrice ? `(Early: ${t.earlyBirdPrice})` : ''}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
