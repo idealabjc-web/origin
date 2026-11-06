@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Mic, Linkedin, Building2, BookOpen, Sparkles, Send, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Mic, Linkedin, Building2, Sparkles, Send, CheckCircle2, AlertCircle } from 'lucide-react'
 import { speakers as fallbackSpeakers, type Speaker } from '../data/content'
 import { getSpeakers, submitSpeakerApplication, isSupabaseConfigured } from '../lib/supabase'
 import Modal from '../components/Modal'
@@ -127,69 +127,50 @@ export default function SpeakersPage() {
             />
           </div>
 
-          <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 sm:mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {filtered.map((s) => (
               <motion.article
                 key={s.id}
-                whileHover={{ y: -6 }}
-                className="group flex flex-col justify-between overflow-hidden rounded-3xl bg-white shadow-sm border border-slate-200 transition-all hover:shadow-2xl hover:border-gold/50"
+                whileHover={{ y: -4 }}
+                className="group flex flex-col justify-between overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200 transition-all hover:shadow-xl hover:border-gold/50"
               >
                 <div>
-                  <div className="relative aspect-[4/4] overflow-hidden bg-slate-100">
+                  <div className="relative aspect-square overflow-hidden bg-slate-100">
                     <img
                       src={s.image}
                       alt={s.name}
                       className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-navy-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-300" />
                     {s.linkedin && s.linkedin !== '#' && (
                       <a
                         href={s.linkedin}
                         target="_blank"
                         rel="noreferrer"
                         aria-label={`${s.name} LinkedIn`}
-                        className="absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full bg-white text-navy-950 shadow hover:bg-gold transition opacity-0 group-hover:opacity-100"
+                        className="absolute bottom-2.5 right-2.5 grid h-8 w-8 place-items-center rounded-full bg-white text-navy-950 shadow hover:bg-gold transition opacity-0 group-hover:opacity-100"
                       >
-                        <Linkedin size={16} />
+                        <Linkedin size={15} />
                       </a>
                     )}
                   </div>
 
-                  <div className="p-6">
-                    <h3 className="font-display text-lg font-bold text-navy-950 group-hover:text-gold-dark transition">
+                  <div className="p-4">
+                    <h3 className="font-display text-base font-bold text-navy-950 group-hover:text-gold-dark transition leading-snug line-clamp-1">
                       {s.name}
                     </h3>
-                    <p className="mt-1 text-xs font-semibold text-gold-dark">{s.role}</p>
 
-                    {s.organization && (
-                      <p className="mt-2 flex items-center gap-1.5 text-xs text-charcoal/65">
-                        <Building2 size={13} className="flex-shrink-0 text-navy-900" />
-                        <span className="truncate">{s.organization}</span>
-                      </p>
-                    )}
-
-                    {s.topic && (
-                      <div className="mt-3 rounded-xl bg-slate-50 p-2.5 border border-slate-100">
-                        <p className="flex items-center gap-1 text-[11px] font-bold text-navy-900 uppercase tracking-wider">
-                          <BookOpen size={12} className="text-gold-dark" /> Keynote Subject
-                        </p>
-                        <p className="mt-1 text-xs text-charcoal/80 line-clamp-2 leading-relaxed">
-                          {s.topic}
-                        </p>
-                      </div>
-                    )}
-
-                    {s.bio && (
-                      <p className="mt-3 text-xs text-charcoal/65 line-clamp-3 leading-relaxed">
+                    {s.bio ? (
+                      <p className="mt-1.5 text-xs text-charcoal/70 line-clamp-2 leading-relaxed">
                         {s.bio}
                       </p>
-                    )}
+                    ) : s.organization ? (
+                      <p className="mt-1.5 text-xs text-charcoal/65 line-clamp-1 flex items-center gap-1">
+                        <Building2 size={12} className="flex-shrink-0 text-navy-900" />
+                        <span className="truncate">{s.organization}</span>
+                      </p>
+                    ) : null}
                   </div>
-                </div>
-
-                <div className="p-6 pt-0 border-t border-slate-100 pt-4 flex items-center justify-between text-[11px] font-bold text-navy-900">
-                  <span>Plenary Speaker</span>
-                  <span className="rounded-full bg-navy-950 px-2.5 py-0.5 text-white">2027</span>
                 </div>
               </motion.article>
             ))}

@@ -32,14 +32,14 @@ export default function FeaturedSpeakers() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((sp) => (
             <article
               key={sp.id}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1.5 hover:border-gold/40 hover:shadow-2xl hover:shadow-gold/5 flex flex-col justify-between"
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur transition-all duration-300 hover:-translate-y-1.5 hover:border-gold/40 hover:shadow-2xl hover:shadow-gold/5 flex flex-col justify-between"
             >
               <div>
-                <div className="relative aspect-square overflow-hidden rounded-xl bg-navy-900 mb-5">
+                <div className="relative aspect-square overflow-hidden rounded-xl bg-navy-900 mb-3">
                   <img
                     loading="lazy"
                     src={sp.image}
@@ -53,31 +53,24 @@ export default function FeaturedSpeakers() {
                       target="_blank"
                       rel="noreferrer"
                       aria-label={`${sp.name} LinkedIn`}
-                      className="absolute bottom-3 right-3 grid h-8 w-8 place-items-center rounded-full bg-gold text-navy-950 shadow-md transition hover:scale-110"
+                      className="absolute bottom-2.5 right-2.5 grid h-7 w-7 place-items-center rounded-full bg-gold text-navy-950 shadow-md transition hover:scale-110"
                     >
-                      <Linkedin size={15} />
+                      <Linkedin size={14} />
                     </a>
                   )}
                 </div>
 
-                <h3 className="font-display text-xl font-bold text-white group-hover:text-gold transition">
+                <h3 className="font-display text-base sm:text-lg font-bold text-white group-hover:text-gold transition line-clamp-1">
                   {sp.name}
                 </h3>
-                <p className="text-sm font-semibold text-gold/90 mt-0.5">{sp.role}</p>
-                {sp.organization && (
-                  <p className="text-xs text-white/60 mt-0.5">{sp.organization}</p>
+                {sp.role && sp.role !== 'Keynote Speaker' && (
+                  <p className="text-xs font-semibold text-gold/90 mt-0.5">{sp.role}</p>
                 )}
-
-                {sp.topic && (
-                  <div className="mt-4 rounded-xl bg-white/5 p-3 border border-white/5">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gold/80">Keynote Topic</p>
-                    <p className="text-xs text-white/80 mt-1 line-clamp-2">{sp.topic}</p>
-                  </div>
-                )}
-
-                {sp.bio && (
-                  <p className="mt-3 text-xs text-white/60 line-clamp-2">{sp.bio}</p>
-                )}
+                {sp.bio ? (
+                  <p className="mt-1.5 text-xs text-white/70 line-clamp-2 leading-relaxed">{sp.bio}</p>
+                ) : sp.organization ? (
+                  <p className="text-xs text-white/60 mt-1 line-clamp-1">{sp.organization}</p>
+                ) : null}
               </div>
             </article>
           ))}
