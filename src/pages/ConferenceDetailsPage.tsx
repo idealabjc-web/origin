@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { jsPDF } from 'jspdf'
 import {
   ArrowLeft, CalendarDays, MapPin,
   Share2, Ticket, ChevronRight,
@@ -178,100 +179,296 @@ export default function ConferenceDetailsPage({
     setDirectDownloadUrl('')
   }
 
-  function triggerDocumentDownload(conf: Conference, type: 'brochure' | 'abstract') {
+  function generateConferencePdf(conf: Conference, type: 'brochure' | 'abstract', fileName: string) {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const isBrochure = type === 'brochure'
+    const pageWidth = 210
+    const pageHeight = 297
+    const margin = 18
+    const contentWidth = pageWidth - margin * 2
+    let y = margin
+
+    function drawFooter() {
+      doc.setDrawColor(226, 232, 240)
+      doc.setLineWidth(0.3)
+      doc.line(margin, pageHeight - 14, pageWidth - margin, pageHeight - 14)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.setTextColor(100, 116, 139)
+      doc.text('ORIGIN Global Conferences  •  www.originconferences.com  •  contact@originconferences.com', margin, pageHeight - 9)
+      doc.text('Official Documentation', pageWidth - margin, pageHeight - 9, { align: 'right' })
+    }
+
+    function drawHeaderMini() {
+      doc.setFillColor(15, 23, 42)
+      doc.rect(0, 0, pageWidth, 16, 'F')
+      doc.setFillColor(217, 119, 6)
+      doc.rect(0, 16, pageWidth, 1.5, 'F')
+
+      doc.setTextColor(255, 255, 255)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(10)
+      doc.text('ORIGIN GLOBAL CONFERENCES', margin, 11)
+
+      doc.setTextColor(245, 158, 11)
+      doc.setFontSize(8.5)
+      doc.text(isBrochure ? 'CONFERENCE BROCHURE' : 'CALL FOR ABSTRACTS', pageWidth - margin, 11, { align: 'right' })
+    }
+
+    function checkPageBreak(neededHeight: number) {
+      if (y + neededHeight > pageHeight - 20) {
+        drawFooter()
+        doc.addPage()
+        drawHeaderMini()
+        y = 26
+      }
+    }
+
+    // Top Header Banner
+    doc.setFillColor(15, 23, 42)
+    doc.rect(0, 0, pageWidth, 28, 'F')
+    doc.setFillColor(217, 119, 6)
+    doc.rect(0, 28, pageWidth, 2, 'F')
+
+    // Brand Name
+    doc.setTextColor(255, 255, 255)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(14)
+    doc.text('ORIGIN', margin, 18)
+    doc.setTextColor(245, 158, 11)
+    doc.text('GLOBAL CONFERENCES', margin + 22, 18)
+
+    // Document Type Tag
+    doc.setFillColor(245, 158, 11)
+    doc.roundedRect(pageWidth - margin - 52, 11, 52, 8, 2, 2, 'F')
+    doc.setTextColor(15, 23, 42)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'bold')
+    const badgeText = isBrochure ? 'OFFICIAL BROCHURE' : 'CALL FOR ABSTRACTS'
+    doc.text(badgeText, pageWidth - margin - 26, 16.5, { align: 'center' })
+
+    y = 38
+
+    // Conference Title
+    doc.setTextColor(15, 23, 42)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(15)
+    const titleLines = doc.splitTextToSize(conf.title || 'International Scientific Congress', contentWidth)
+    doc.text(titleLines, margin, y)
+    y += titleLines.length * 6 + 4
+
+    // Metadata Card Box
+    doc.setFillColor(248, 250, 252)
+    doc.setDrawColor(226, 232, 240)
+    doc.setLineWidth(0.3)
+    doc.roundedRect(margin, y, contentWidth, 22, 2, 2, 'FD')
+
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(71, 85, 105)
+    doc.text('Date & Schedule:', margin + 4, y + 6)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(15, 23, 42)
+    doc.text(conf.date || 'To be announced', margin + 35, y + 6)
+
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(71, 85, 105)
+    doc.text('Location & Venue:', margin + 4, y + 12)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(15, 23, 42)
+    doc.text(conf.location || 'Global Destination', margin + 35, y + 12)
+
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(71, 85, 105)
+    doc.text('Field / Category:', margin + 4, y + 18)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(15, 23, 42)
+    doc.text(conf.category || 'Academic & Professional', margin + 35, y + 18)
+
+    y += 28
+
+    // Theme Callout
+    if (conf.theme && conf.theme.trim()) {
+      checkPageBreak(20)
+      doc.setFillColor(254, 243, 199)
+      doc.setDrawColor(245, 158, 11)
+      doc.setLineWidth(0.4)
+      const themeLines = doc.splitTextToSize(`Theme: "${conf.theme.trim()}"`, contentWidth - 8)
+      const themeBoxHeight = Math.max(14, themeLines.length * 4.5 + 6)
+      doc.roundedRect(margin, y, contentWidth, themeBoxHeight, 2, 2, 'FD')
+      doc.setFont('helvetica', 'italic')
+      doc.setFontSize(9)
+      doc.setTextColor(146, 64, 14)
+      doc.text(themeLines, margin + 4, y + 5.5)
+      y += themeBoxHeight + 6
+    }
+
+    function renderSectionHeader(title: string) {
+      checkPageBreak(16)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(11)
+      doc.setTextColor(15, 23, 42)
+      doc.text(title.toUpperCase(), margin, y)
+      y += 2
+      doc.setDrawColor(217, 119, 6)
+      doc.setLineWidth(0.6)
+      doc.line(margin, y, margin + 35, y)
+      doc.setDrawColor(226, 232, 240)
+      doc.setLineWidth(0.2)
+      doc.line(margin + 35, y, margin + contentWidth, y)
+      y += 6
+    }
+
+    // Section 1: Overview or Call for Abstracts
+    if (isBrochure) {
+      renderSectionHeader('Executive Overview')
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(51, 65, 85)
+      const descText = conf.description || 'Welcome to this premier international summit convening leading researchers, clinicians, scholars, and industry professionals from around the globe to discuss cutting-edge breakthroughs, clinical discoveries, and cross-sector innovations.'
+      const descLines = doc.splitTextToSize(descText, contentWidth)
+      for (const line of descLines) {
+        checkPageBreak(5)
+        doc.text(line, margin, y)
+        y += 4.5
+      }
+      y += 4
+    } else {
+      renderSectionHeader('Call for Abstracts & Scope')
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(51, 65, 85)
+      const abstractIntro = `Researchers, academicians, clinicians, and corporate scientists are cordially invited to submit original abstracts for oral presentations, poster sessions, and interactive workshops at ${conf.title}. Accepted submissions will be published in the official conference proceedings.`
+      const introLines = doc.splitTextToSize(abstractIntro, contentWidth)
+      for (const line of introLines) {
+        checkPageBreak(5)
+        doc.text(line, margin, y)
+        y += 4.5
+      }
+      y += 4
+    }
+
+    // Section 2: Scientific Sessions & Tracks
+    const sessions = parseSessionsList(conf.sessions)
+    if (sessions.length > 0) {
+      renderSectionHeader('Scientific Sessions & Tracks')
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8.5)
+      doc.setTextColor(30, 41, 59)
+      for (const s of sessions) {
+        checkPageBreak(5)
+        doc.setFillColor(217, 119, 6)
+        doc.circle(margin + 2.5, y - 1, 0.9, 'F')
+        const sLines = doc.splitTextToSize(s, contentWidth - 8)
+        doc.text(sLines, margin + 6, y)
+        y += sLines.length * 4.2 + 1
+      }
+      y += 4
+    }
+
+    // Section 3: Guidelines or Contact Inquiries
+    if (!isBrochure) {
+      renderSectionHeader('Abstract Submission Guidelines')
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8.5)
+      doc.setTextColor(51, 65, 85)
+      const guidelines = [
+        'Word Count: Abstracts should be structured and contain between 250 and 300 words.',
+        'Required Structure: Background/Aim, Methods, Results, and Conclusions.',
+        'Metadata: Please clearly list Title, Author full names, Institutional Affiliations, and Corresponding Email.',
+        'Keywords: Provide 3 to 5 relevant medical / scientific keywords.',
+        'Submission: Email directly to contact@originconferences.com or submit via your delegate portal.'
+      ]
+      for (const g of guidelines) {
+        checkPageBreak(5)
+        doc.setFillColor(71, 85, 105)
+        doc.circle(margin + 2.5, y - 1, 0.9, 'F')
+        const gLines = doc.splitTextToSize(g, contentWidth - 8)
+        doc.text(gLines, margin + 6, y)
+        y += gLines.length * 4.2 + 1
+      }
+    } else {
+      renderSectionHeader('Registration & Delegate Information')
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8.5)
+      doc.setTextColor(51, 65, 85)
+      const delegateInfo = [
+        'Registration Passes: Flexible delegate packages including Oral Speaker, Poster Presenter, Delegate Listener, and Virtual Passes.',
+        'Group Discounts: Special institutional discounts are available for delegations of 3 or more attendees.',
+        'Official Delegate Desk: contact@originconferences.com',
+        'Website & Portal: https://www.originconferences.com'
+      ]
+      for (const info of delegateInfo) {
+        checkPageBreak(5)
+        doc.setFillColor(71, 85, 105)
+        doc.circle(margin + 2.5, y - 1, 0.9, 'F')
+        const iLines = doc.splitTextToSize(info, contentWidth - 8)
+        doc.text(iLines, margin + 6, y)
+        y += iLines.length * 4.2 + 1
+      }
+    }
+
+    drawFooter()
+
+    // Create blob URL for fallback click link and immediately trigger direct save
+    try {
+      const blob = doc.output('blob')
+      const blobUrl = URL.createObjectURL(blob)
+      setDirectDownloadUrl(blobUrl)
+    } catch (e) {
+      console.warn('Error creating blob output', e)
+    }
+
+    doc.save(fileName)
+  }
+
+  async function triggerDocumentDownload(conf: Conference, type: 'brochure' | 'abstract') {
     const isBrochure = type === 'brochure'
     const targetUrl = isBrochure
       ? (conf.brochureUrl || effectiveBrochureUrl)
       : (conf.abstractUrl || effectiveAbstractUrl)
 
+    const rawTitle = conf.title || 'Conference'
+    const safeTitle = rawTitle.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 45)
+    const fileName = `${safeTitle}_${isBrochure ? 'Brochure' : 'Abstract'}.pdf`
+
     if (targetUrl && targetUrl.trim()) {
-      setDirectDownloadUrl(targetUrl.trim())
+      const url = targetUrl.trim()
+      setDirectDownloadUrl(url)
+
+      try {
+        const response = await fetch(url)
+        if (response.ok) {
+          const blob = await response.blob()
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' })
+          const blobUrl = URL.createObjectURL(pdfBlob)
+          setDirectDownloadUrl(blobUrl)
+
+          const link = document.createElement('a')
+          link.href = blobUrl
+          link.download = fileName
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 15000)
+          return
+        }
+      } catch (err) {
+        console.warn('Direct fetch failed, falling back to anchor trigger or generator:', err)
+      }
+
+      // If fetch fails (e.g. cross-origin restrictions on external host), trigger anchor download directly
       const link = document.createElement('a')
-      link.href = targetUrl.trim()
-      link.target = '_blank'
-      link.download = `${conf.title.replace(/[^a-zA-Z0-9]/g, '_')}_${isBrochure ? 'Brochure' : 'Abstract'}`
+      link.href = url
+      link.download = fileName
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       return
     }
 
-    // Auto-generate official printable conference document if no custom file uploaded yet
-    const docTitle = isBrochure ? `Official Conference Brochure` : `Call for Abstracts & Submission Guidelines`
-    const docContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${docTitle} - ${conf.title}</title>
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #0f172a; line-height: 1.6; max-width: 800px; margin: auto; }
-          .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
-          .logo { font-size: 24px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 1px; }
-          .logo span { color: #d97706; }
-          .title { font-size: 26px; font-weight: 800; color: #0f172a; margin: 15px 0 10px; line-height: 1.3; }
-          .meta { font-size: 14px; color: #475569; margin-bottom: 8px; }
-          .theme { font-style: italic; color: #b45309; font-weight: 600; font-size: 16px; margin: 15px 0; background: #fef3c7; padding: 12px 18px; border-radius: 8px; }
-          h2 { font-size: 18px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-top: 30px; text-transform: uppercase; letter-spacing: 0.5px; }
-          p { margin: 10px 0; font-size: 14px; }
-          ul { padding-left: 20px; }
-          li { margin-bottom: 6px; font-size: 14px; }
-          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b; text-align: center; }
-          .btn-print { background: #0f172a; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-          @media print { .btn-print { display: none; } }
-        </style>
-      </head>
-      <body>
-        <button class="btn-print" onclick="window.print()">Print or Save as PDF</button>
-        <div class="header">
-          <div class="logo">ORIGIN <span>GLOBAL CONFERENCES</span></div>
-          <div class="title">${conf.title}</div>
-          <div class="meta"><strong>Date & Schedule:</strong> ${conf.date}</div>
-          <div class="meta"><strong>Location:</strong> ${conf.location}</div>
-          <div class="meta"><strong>Category:</strong> ${conf.category}</div>
-          ${conf.theme ? `<div class="theme">"${conf.theme}"</div>` : ''}
-        </div>
-        ${isBrochure ? `
-          <h2>Executive Overview</h2>
-          <p>${(conf.description || '').replace(/\\n/g, '<br/>')}</p>
-          <h2>Scientific Sessions & Tracks</h2>
-          <ul>
-            ${parseSessionsList(conf.sessions).map(s => `<li>${s}</li>`).join('')}
-          </ul>
-          <h2>Delegate Registration & Inquiries</h2>
-          <p>For registrations, group accommodations, or sponsorships, contact our delegate desk at <strong>contact@originconferences.com</strong>.</p>
-        ` : `
-          <h2>Call for Abstracts & Guidelines</h2>
-          <p>Researchers, academicians, and clinicians are cordially invited to submit their original abstracts for oral, poster, and virtual presentations at <strong>${conf.title}</strong>.</p>
-          <h2>Track Categories</h2>
-          <ul>
-            ${parseSessionsList(conf.sessions).map(s => `<li>${s}</li>`).join('')}
-          </ul>
-          <h2>Submission Requirements</h2>
-          <ul>
-            <li>Abstract length: 250 - 300 words.</li>
-            <li>Include: Title, Author names, Affiliations, and 3 - 5 Keywords.</li>
-            <li>Format: Introduction, Methods, Results, and Conclusion.</li>
-            <li>Submit directly via contact@originconferences.com or through your delegate advisor.</li>
-          </ul>
-        `}
-        <div class="footer">
-          ORIGIN Global Conferences • https://www.originconferences.com • contact@originconferences.com
-        </div>
-      </body>
-      </html>
-    `
-    const blob = new Blob([docContent], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    setDirectDownloadUrl(url)
-    const newTab = window.open(url, '_blank')
-    if (!newTab) {
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${conf.title.replace(/[^a-zA-Z0-9]/g, '_')}_${isBrochure ? 'Brochure' : 'Abstract'}.html`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
+    // Auto-generate official PDF directly using jsPDF
+    generateConferencePdf(conf, type, fileName)
   }
 
   async function handleDownloadSubmit(e: FormEvent) {
@@ -296,7 +493,7 @@ export default function ConferenceDetailsPage({
       console.warn('Inquiry submission notice:', err)
     }
 
-    triggerDocumentDownload(currentConf, isBrochure ? 'brochure' : 'abstract')
+    await triggerDocumentDownload(currentConf, isBrochure ? 'brochure' : 'abstract')
     setDownloadSubmitting(false)
     setDownloadSuccess(true)
   }
