@@ -516,13 +516,16 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
     if (!editingSpeaker?.name) return
     setLoading(true)
     const spId = editingSpeaker.id || 'sp_' + Date.now().toString(36)
+    const profession = (editingSpeaker.profession || '').trim()
+    const bio = (editingSpeaker.bio || '').trim()
     const res = await upsertSpeaker({
       id: spId,
-      name: editingSpeaker.name,
-      role: editingSpeaker.role || 'Keynote Speaker',
+      name: editingSpeaker.name.trim(),
+      role: profession || editingSpeaker.role || 'Keynote Speaker',
+      profession: profession,
       organization: editingSpeaker.organization || '',
       topic: editingSpeaker.topic || '',
-      bio: editingSpeaker.bio || '',
+      bio: bio,
       image: editingSpeaker.image || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=70',
       linkedin: editingSpeaker.linkedin || '#'
     })
@@ -1014,6 +1017,7 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                   <button
                     onClick={() => setEditingSpeaker({
                       name: '',
+                      profession: '',
                       bio: '',
                       image: '',
                       role: 'Keynote Speaker',
@@ -1035,15 +1039,25 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                           <img src={sp.image} alt={sp.name} className="h-full w-full object-cover" />
                         </div>
                         <h3 className="font-display font-bold text-base text-white">{sp.name}</h3>
-                        {sp.bio ? (
-                          <p className="mt-1 text-xs text-white/70 line-clamp-3 leading-relaxed">{sp.bio}</p>
-                        ) : (
-                          <p className="mt-1 text-xs text-white/40 italic">No bio provided</p>
+                        {(sp.profession || sp.bio) && (
+                          <p className="mt-1 text-xs text-gold/90 font-medium line-clamp-1">{sp.profession || sp.bio}</p>
+                        )}
+                        {sp.bio && sp.profession && (
+                          <p className="mt-1.5 text-xs text-white/60 line-clamp-2 leading-relaxed">{sp.bio}</p>
                         )}
                       </div>
                       <div className="mt-4 flex items-center justify-end gap-2 border-t border-white/10 pt-3">
                         <button
-                          onClick={() => setEditingSpeaker(sp)}
+                          onClick={() => {
+                            const hasSeparateProfession = !!sp.profession
+                            const initialProfession = sp.profession || sp.bio || sp.role || ''
+                            const initialBio = hasSeparateProfession ? (sp.bio || '') : ''
+                            setEditingSpeaker({
+                              ...sp,
+                              profession: initialProfession,
+                              bio: initialBio
+                            })
+                          }}
                           className="flex items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/20"
                         >
                           <Edit2 size={13} /> Edit
@@ -2009,14 +2023,26 @@ export default function OriginCMS({ isOpen, onClose }: { isOpen: boolean; onClos
                 />
               </div>
 
-              {/* 2. BIO */}
+              {/* 2. PROFESSION (Renamed from Bio) */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Profession *</label>
+                <input
+                  type="text"
+                  value={editingSpeaker.profession || ''}
+                  onChange={(e) => setEditingSpeaker({ ...editingSpeaker, profession: e.target.value })}
+                  placeholder="e.g. Senior Clinical Oncologist, Department of Translational Medicine"
+                  className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold"
+                />
+              </div>
+
+              {/* 3. BIO (New Bio Section) */}
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-white/60">Bio</label>
                 <textarea
-                  rows={4}
+                  rows={5}
                   value={editingSpeaker.bio || ''}
                   onChange={(e) => setEditingSpeaker({ ...editingSpeaker, bio: e.target.value })}
-                  placeholder="Enter speaker bio, background, and research achievements..."
+                  placeholder="Enter detailed speaker biography, research background, career achievements, and publications..."
                   className="mt-1.5 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-gold leading-relaxed"
                 />
               </div>

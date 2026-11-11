@@ -435,7 +435,7 @@ export default function LegalPage({
                           >
                             contact@originconferences.com
                           </a>
-                          .
+                          {' '}or write to our registered office: Block-B, Knapp&apos;s square, Johnredmond Street, Cork, Ireland.
                         </p>
                       </div>
                     </div>
@@ -620,7 +620,7 @@ export default function LegalPage({
                           >
                             contact@originconferences.com
                           </a>
-                          .
+                          {' '}or at our registered office: Block-B, Knapp&apos;s square, Johnredmond Street, Cork, Ireland.
                         </p>
                       </div>
                     </div>
@@ -852,7 +852,7 @@ export default function LegalPage({
                           >
                             contact@originconferences.com
                           </a>
-                          .
+                          {' '}or reach out by post to: Block-B, Knapp&apos;s square, Johnredmond Street, Cork, Ireland.
                         </p>
                       </div>
                     </div>

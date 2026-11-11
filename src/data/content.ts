@@ -5,7 +5,7 @@ export const site = {
   name: 'ORIGIN Conferences',
   // Leave empty until a backend exists. Set to a form/API URL (accepts POST JSON {email}).
   newsletterEndpoint: '',
-  contact: { email: 'contact@originconferences.com', phone: '+00 000 000 0000', address: 'Your office address, City, Country' },
+  contact: { email: 'contact@originconferences.com', phone: '+00 000 000 0000', address: "Block-B, Knapp's square, Johnredmond Street, Cork, Ireland." },
   social: [
     { label: 'LinkedIn', href: '#' }, { label: 'X / Twitter', href: '#' },
     { label: 'Facebook', href: '#' }, { label: 'YouTube', href: '#' }
@@ -281,9 +281,10 @@ export const events: UpcomingEvent[] = []
 export interface Speaker {
   id: string
   name: string
-  role: string
+  role?: string
   organization?: string
   topic?: string
+  profession?: string
   bio?: string
   image: string
   linkedin?: string
@@ -294,9 +295,10 @@ export const speakers: Speaker[] = [
     id: 'sp1',
     name: 'Dr. Elena Rostova',
     role: 'Chief Science Officer',
+    profession: 'Chief Science Officer & Targeted Genomics Pioneer',
     organization: 'Global Health BioTech',
     topic: 'Next-Generation Oncology & Precision Diagnostics',
-    bio: 'Pioneering researcher in targeted genomics and translational medicine.',
+    bio: 'Pioneering researcher in targeted genomics and translational medicine with over 15 years leading cross-border clinical trials and oncology research programs across Europe and North America.',
     image: u('photo-1573496359142-b8d87734a5a2', 800),
     linkedin: '#'
   },
@@ -304,9 +306,10 @@ export const speakers: Speaker[] = [
     id: 'sp2',
     name: 'Marcus Vance',
     role: 'VP of Emerging Tech',
+    profession: 'VP of Emerging Tech & Enterprise AI Strategist',
     organization: 'Nova Dynamics',
     topic: 'Autonomous Systems & Strategic Enterprise AI',
-    bio: 'Advisor to Fortune 500 boards on digital transformation.',
+    bio: 'Advisor to Fortune 500 executive boards on digital transformation, robotic process automation, and the ethical integration of large-scale artificial intelligence models.',
     image: u('photo-1560250097-0b93528c311a', 800),
     linkedin: '#'
   },
@@ -314,9 +317,10 @@ export const speakers: Speaker[] = [
     id: 'sp3',
     name: 'Prof. Amara Okafor',
     role: 'Chair of Global Health',
+    profession: 'Chair of Global Health & Epidemiology Specialist',
     organization: 'Oxford Academic Institute',
     topic: 'Cross-Border Collaboration in Public Health Resiliency',
-    bio: 'Author of 40+ publications on epidemiological infrastructure.',
+    bio: 'Author of 40+ publications on epidemiological infrastructure, pandemic preparedness, and equitable vaccine distribution frameworks in developing nations.',
     image: u('photo-1580894732444-8ecded7900cd', 800),
     linkedin: '#'
   },
@@ -324,9 +328,10 @@ export const speakers: Speaker[] = [
     id: 'sp4',
     name: 'David Chen',
     role: 'Head of Sustainable Technology',
+    profession: 'Head of Sustainable Technology & Clean Energy Fellow',
     organization: 'CleanTech Ventures',
     topic: 'Decarbonizing Heavy Industry with Intelligent Systems',
-    bio: 'Clean energy venture investor and technical fellow.',
+    bio: 'Clean energy venture investor and technical fellow spearheading industrial electrification, circular manufacturing protocols, and carbon capture infrastructure.',
     image: u('photo-1519085360753-af0119f7cbe7', 800),
     linkedin: '#'
   }

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Mail, Phone, Send, CheckCircle2, AlertCircle,
-  ChevronDown, Clock, ShieldCheck, Globe2
+  ChevronDown, Clock, ShieldCheck, MapPin
 } from 'lucide-react'
 import { submitContactMessage, isSupabaseConfigured } from '../lib/supabase'
 
@@ -254,11 +254,11 @@ export default function ContactPage({ onNavigate }: { onNavigate?: (path: string
 
                 <div className="flex items-start gap-3">
                   <div className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-gold flex-shrink-0">
-                    <Globe2 size={18} />
+                    <MapPin size={18} />
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-white/50 font-bold">Global Secretariat</p>
-                    <p className="text-xs">London EC2A 4NE, United Kingdom</p>
+                    <p className="text-[11px] uppercase tracking-wider text-white/50 font-bold">Office Address</p>
+                    <p className="text-xs leading-relaxed text-white/90">Block-B, Knapp&apos;s square, Johnredmond Street, Cork, Ireland.</p>
                   </div>
                 </div>
               </div>

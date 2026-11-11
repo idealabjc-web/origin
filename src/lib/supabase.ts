@@ -350,6 +350,29 @@ export function packConferenceData(desc: string, meta: {
   return `${clean}\n\n<!--ORIGIN_DATA:${JSON.stringify(payload)}-->`
 }
 
+export function unpackSpeakerData(rawBio: string | undefined | null) {
+  if (!rawBio) return { bio: '', profession: '' }
+  const match = rawBio.match(/<!--ORIGIN_SPEAKER:([\s\S]*?)-->/)
+  if (!match) return { bio: rawBio, profession: '' }
+  try {
+    const meta = JSON.parse(match[1])
+    const cleanBio = rawBio.replace(/<!--ORIGIN_SPEAKER:[\s\S]*?-->/, '').trim()
+    return {
+      bio: cleanBio,
+      profession: typeof meta.profession === 'string' ? meta.profession : '',
+    }
+  } catch {
+    return { bio: rawBio, profession: '' }
+  }
+}
+
+export function packSpeakerData(bio: string, profession: string): string {
+  const cleanBio = (bio || '').replace(/<!--ORIGIN_SPEAKER:[\s\S]*?-->/, '').trim()
+  if (!profession || !profession.trim()) return cleanBio
+  const meta = JSON.stringify({ profession: profession.trim() })
+  return `${cleanBio}\n\n<!--ORIGIN_SPEAKER:${meta}-->`.trim()
+}
+
 // Global Pricing Tiers helper
 export function getGlobalPricingTiers(): PricingTier[] {
   return getLocalItem<PricingTier[]>(LOCAL_GLOBAL_PRICING_KEY, defaultPricingTiers)
@@ -592,16 +615,35 @@ export async function getSpeakers(): Promise<Speaker[]> {
       return getLocalItem<Speaker[]>(LOCAL_SPEAKERS_KEY, defaultSpeakers)
     }
 
-    const list = data.map((item) => ({
-      id: item.id,
-      name: item.name,
-      role: item.role,
-      organization: item.organization || '',
-      topic: item.topic || '',
-      bio: item.bio || '',
-      image: item.image,
-      linkedin: item.linkedin || '#',
-    }))
+    const list = data.map((item) => {
+      const unpacked = unpackSpeakerData(item.bio)
+      // "the matter in bio has to go to profession and in bio speakers bio will be added"
+      let profession = item.profession || unpacked.profession
+      let bio = unpacked.profession ? unpacked.bio : ''
+
+      if (!profession) {
+        if (item.bio && !item.bio.includes('<!--ORIGIN_SPEAKER:')) {
+          profession = item.bio
+          bio = ''
+        } else if (item.role && item.role !== 'Keynote Speaker') {
+          profession = item.role
+        }
+      } else if (!bio && unpacked.bio && unpacked.bio !== profession) {
+        bio = unpacked.bio
+      }
+
+      return {
+        id: item.id,
+        name: item.name,
+        role: item.role || profession || 'Keynote Speaker',
+        profession: profession || '',
+        organization: item.organization || '',
+        topic: item.topic || '',
+        bio: bio || '',
+        image: item.image,
+        linkedin: item.linkedin || '#',
+      }
+    })
     setLocalItem(LOCAL_SPEAKERS_KEY, list)
     return list
   } catch {
@@ -877,20 +919,57 @@ export async function updateStatistic(label: string, value: number, suffix: stri
 }
 
 export async function upsertSpeaker(sp: Partial<Speaker> & { id: string }): Promise<{ success: boolean; error?: string }> {
-  if (!supabase) return { success: false, error: 'Supabase is not configured' }
+  // Update local cache first
+  const current = getLocalItem<Speaker[]>(LOCAL_SPEAKERS_KEY, defaultSpeakers)
+  const existingIdx = current.findIndex(s => s.id === sp.id)
+  const updatedItem: Speaker = {
+    id: sp.id,
+    name: sp.name || '',
+    role: sp.role || sp.profession || 'Keynote Speaker',
+    profession: sp.profession || '',
+    organization: sp.organization || '',
+    topic: sp.topic || '',
+    bio: sp.bio || '',
+    image: sp.image || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=70',
+    linkedin: sp.linkedin || '#',
+  }
+  let newCurrent = [...current]
+  if (existingIdx >= 0) {
+    newCurrent[existingIdx] = { ...newCurrent[existingIdx], ...updatedItem }
+  } else {
+    newCurrent.push(updatedItem)
+  }
+  setLocalItem(LOCAL_SPEAKERS_KEY, newCurrent)
+
+  if (!supabase) {
+    notifyDataChanged()
+    return { success: true }
+  }
   try {
-    const { error } = await supabase
+    const packedBio = packSpeakerData(sp.bio || '', sp.profession || '')
+    const basePayload: any = {
+      id: sp.id,
+      name: sp.name,
+      role: sp.role || sp.profession || 'Keynote Speaker',
+      organization: sp.organization || '',
+      topic: sp.topic || '',
+      bio: packedBio,
+      image: sp.image,
+      linkedin: sp.linkedin || '#',
+    }
+
+    // Attempt with profession column
+    let { error } = await supabase
       .from('speakers')
-      .upsert({
-        id: sp.id,
-        name: sp.name,
-        role: sp.role,
-        organization: sp.organization || '',
-        topic: sp.topic || '',
-        bio: sp.bio || '',
-        image: sp.image,
-        linkedin: sp.linkedin || '#',
-      }, { onConflict: 'id' })
+      .upsert({ ...basePayload, profession: sp.profession || '' }, { onConflict: 'id' })
+
+    // Fallback if profession column is not present in PostgreSQL yet
+    if (error && error.message?.toLowerCase().includes('profession')) {
+      const fallback = await supabase
+        .from('speakers')
+        .upsert(basePayload, { onConflict: 'id' })
+      error = fallback.error
+    }
 
     if (error) return { success: false, error: error.message }
     lastFetchTime = 0

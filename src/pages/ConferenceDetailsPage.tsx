@@ -195,7 +195,7 @@ export default function ConferenceDetailsPage({
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(8)
       doc.setTextColor(100, 116, 139)
-      doc.text('ORIGIN Global Conferences  •  www.originconferences.com  •  contact@originconferences.com', margin, pageHeight - 9)
+      doc.text('ORIGIN Global Conferences  •  Cork, Ireland  •  contact@originconferences.com', margin, pageHeight - 9)
       doc.text('Official Documentation', pageWidth - margin, pageHeight - 9, { align: 'right' })
     }
 
