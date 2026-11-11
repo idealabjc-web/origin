@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Mail, Phone, Send, CheckCircle2, AlertCircle,
-  ChevronDown, Clock, ShieldCheck, MapPin
+  ChevronDown, Clock, ShieldCheck, MapPin, Instagram, Youtube, Facebook
 } from 'lucide-react'
 import { submitContactMessage, isSupabaseConfigured } from '../lib/supabase'
 
@@ -259,6 +259,39 @@ export default function ContactPage({ onNavigate }: { onNavigate?: (path: string
                   <div>
                     <p className="text-[11px] uppercase tracking-wider text-white/50 font-bold">Office Address</p>
                     <p className="text-xs leading-relaxed text-white/90">Block-B, Knapp&apos;s square, Johnredmond Street, Cork, Ireland.</p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-white/10">
+                  <p className="text-[11px] uppercase tracking-wider text-white/50 font-bold mb-2.5">Official Social Channels</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href="https://www.instagram.com/origin.conferences/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-gold hover:text-navy-950 px-3 py-1.5 text-xs text-white/90 transition shadow-sm font-medium"
+                    >
+                      <Instagram size={14} />
+                      <span>Instagram</span>
+                    </a>
+                    <a
+                      href="https://www.youtube.com/@ORIGINConferences"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-gold hover:text-navy-950 px-3 py-1.5 text-xs text-white/90 transition shadow-sm font-medium"
+                    >
+                      <Youtube size={14} />
+                      <span>YouTube</span>
+                    </a>
+                    <a
+                      href="https://www.facebook.com/people/Origin-Global-Conferences/61595603019923/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-gold hover:text-navy-950 px-3 py-1.5 text-xs text-white/90 transition shadow-sm font-medium"
+                    >
+                      <Facebook size={14} />
+                      <span>Facebook</span>
+                    </a>
                   </div>
                 </div>
               </div>

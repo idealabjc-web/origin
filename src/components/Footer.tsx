@@ -1,3 +1,4 @@
+import { Instagram, Youtube, Facebook, Linkedin } from 'lucide-react'
 import { navItems, site } from '../data/content'
 
 export default function Footer({ onNavigate }: { onNavigate?: (path: string) => void }) {
@@ -62,7 +63,6 @@ export default function Footer({ onNavigate }: { onNavigate?: (path: string) => 
           <h3 className="font-semibold text-white">Contact</h3>
           <ul className="mt-4 space-y-2">
             <li>{site.contact.address}</li>
-            <li>{site.contact.phone}</li>
             <li>
               <a
                 href={`mailto:${site.contact.email}`}
@@ -72,12 +72,29 @@ export default function Footer({ onNavigate }: { onNavigate?: (path: string) => 
               </a>
             </li>
           </ul>
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1">
-            {site.social.map((s) => (
-              <a key={s.label} href={s.href} className="hover:text-gold" rel="noreferrer">
-                {s.label}
-              </a>
-            ))}
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            {site.social.map((s) => {
+              const lower = s.label.toLowerCase()
+              const Icon = lower.includes('instagram') ? Instagram
+                : lower.includes('youtube') ? Youtube
+                : lower.includes('facebook') ? Facebook
+                : Linkedin
+
+              return (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  title={s.label}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 hover:border-gold/50 hover:bg-gold hover:text-navy-950 px-3 py-1.5 text-xs text-white/90 transition shadow-sm"
+                >
+                  <Icon size={14} />
+                  <span>{s.label}</span>
+                </a>
+              )
+            })}
           </div>
         </div>
       </div>

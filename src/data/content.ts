@@ -5,10 +5,12 @@ export const site = {
   name: 'ORIGIN Conferences',
   // Leave empty until a backend exists. Set to a form/API URL (accepts POST JSON {email}).
   newsletterEndpoint: '',
-  contact: { email: 'contact@originconferences.com', phone: '+00 000 000 0000', address: "Block-B, Knapp's square, Johnredmond Street, Cork, Ireland." },
+  contact: { email: 'contact@originconferences.com', phone: '', address: "Block-B, Knapp's square, Johnredmond Street, Cork, Ireland." },
   social: [
-    { label: 'LinkedIn', href: '#' }, { label: 'X / Twitter', href: '#' },
-    { label: 'Facebook', href: '#' }, { label: 'YouTube', href: '#' }
+    { label: 'Instagram', href: 'https://www.instagram.com/origin.conferences/' },
+    { label: 'YouTube', href: 'https://www.youtube.com/@ORIGINConferences' },
+    { label: 'Facebook', href: 'https://www.facebook.com/people/Origin-Global-Conferences/61595603019923/' },
+    { label: 'LinkedIn', href: '#' }
   ],
   ctaLinks: { speaker: '#contact', community: '#newsletter', register: '#events', conferences: '#conferences' },
   legal: { privacy: '/privacy', terms: '/terms', refund: '/refund-policy' }
