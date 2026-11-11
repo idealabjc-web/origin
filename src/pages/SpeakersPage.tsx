@@ -31,6 +31,16 @@ export default function SpeakersPage() {
     return () => window.removeEventListener('origin:data-updated', load)
   }, [])
 
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setSelectedSpeaker(null)
+    }
+    if (selectedSpeaker) {
+      window.addEventListener('keydown', onKeyDown)
+      return () => window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [selectedSpeaker])
+
   async function handleApplySpeaker(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim() || !email.trim() || !abstractText.trim()) {
@@ -343,20 +353,25 @@ export default function SpeakersPage() {
               onClick={(e) => e.stopPropagation()}
               className="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[90vh] flex flex-col"
             >
+              {/* Floating Close Button - Placed at Top-Level with High Z-Index */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setSelectedSpeaker(null)
+                }}
+                className="absolute top-4 right-4 sm:top-5 sm:right-5 z-50 grid h-10 w-10 place-items-center rounded-full bg-white/20 hover:bg-white/35 active:scale-95 text-white transition-all cursor-pointer shadow-lg backdrop-blur-md border border-white/25"
+                aria-label="Close modal"
+              >
+                <X size={20} className="stroke-[2.5]" />
+              </button>
+
               {/* Top Banner with Image & Identity */}
               <div className="relative bg-navy-950 px-6 sm:px-8 pt-8 pb-6 text-white overflow-hidden flex-shrink-0">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-navy-950 to-navy-950" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-navy-950 to-navy-950 pointer-events-none" />
 
-                {/* Close Button */}
-                <button
-                  onClick={() => setSelectedSpeaker(null)}
-                  className="absolute top-5 right-5 grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20 transition z-10"
-                  aria-label="Close"
-                >
-                  <X size={18} />
-                </button>
-
-                <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-5">
+                <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-5 pr-12">
                   <div className="relative h-28 w-28 sm:h-32 sm:w-32 flex-shrink-0 overflow-hidden rounded-2xl border-2 border-gold/40 shadow-xl bg-navy-900">
                     <img
                       src={selectedSpeaker.image}
